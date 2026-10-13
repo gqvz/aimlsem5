@@ -14,6 +14,7 @@ class SpecialistModel(ModelClient):
         if 'Supervisor agent' in system: return json.dumps({'action':self.selected})
         if 'Activity agent' in system: return json.dumps({'activities':['memory','art'] if not self.unsafe else ['send_to_doctor']})
         if 'Review agent' in system: return json.dumps({'pass':not self.unsafe})
+        if 'safety reviewer' in system: return json.dumps({'verdict':'block' if self.unsafe else 'allow','categories':[]})
         return 'I would like to discuss worries about travel at my next visit.'
 
 class AgentTests(unittest.TestCase):
@@ -40,9 +41,11 @@ class AgentTests(unittest.TestCase):
         self.assertEqual(result['visit_brief'],result['text'])
         self.assertIn('Visit preparation',[x['agent'] for x in result['agent_trace']])
         self.assertEqual(result['agent_trace'][-1]['outcome'],'approved')
+        self.assertIn('Guard',[x['agent'] for x in result['agent_trace']])
         veto=respond({'text':'Draft my concerns about travel','action':'brief'},SpecialistModel('brief',True))
         self.assertEqual(veto['mode'],'fallback')
-        self.assertEqual(veto['agent_trace'][-1]['outcome'],'vetoed')
+        # the independent guard blocks first, so the fixed fallback is shown and the Review agent never runs
+        self.assertEqual(veto['agent_trace'][-1],{'agent':'Guard','tool':'semantic_check','outcome':'blocked:judge','mode':'llm'})
 
 
 class CatalogueParityTests(unittest.TestCase):

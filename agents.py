@@ -8,6 +8,8 @@ from dataclasses import dataclass, field
 import json
 from typing import Any
 from sahay.domain.safety import assess
+from sahay.domain import guard as output_guard
+from sahay.domain.guard.config import judge_client
 from engine import (ModelClient, ModelError, LANGS, FALLBACK, SOURCES, _json_object,
     _matches, MEDICAL_REQUEST_PATTERNS, DEPENDENCY_PATTERNS, rule_risk,
     more_cautious, choose_action, choose_card, _fallback_response, _passes_output_check)
@@ -160,6 +162,19 @@ class ReviewAgent:
         s.step('Review','approve_or_veto','approved' if allowed else 'vetoed','llm')
         return allowed
 
+def guard_reply(s, draft, output, card):
+    """Independent semantic check on both the drafted and the final (translated) text."""
+    urls = {card['url']} if card else set()
+    judge, independence = judge_client(s.client)
+    texts = [output] if draft == output else [draft, output]
+    for text in texts:
+        verdict = output_guard.check(text, lang=s.lang, allowed_urls=urls, judge_client=judge, require_judge=True)
+        if not verdict.allowed:
+            s.step('Guard', 'semantic_check', 'blocked:' + (verdict.layer or 'unknown'), 'llm' if verdict.judge == 'judged' else 'fixed')
+            return False
+    s.step('Guard', 'semantic_check', 'approved:' + independence, 'llm')
+    return True
+
 class AgentGraph:
     def run(self,data,client):
         original=str(data.get('text','')).strip()[:4000]
@@ -193,7 +208,7 @@ class AgentGraph:
                 draft=VisitAgent().draft(s) if s.action in ('questions','brief') else KnowledgeAgent().draft(s,card) if card else EmotionalSupportAgent().draft(s)
                 output=LanguageAgent().translate(s,draft)
                 if card and card['url'] not in output: output+='\n\n'+card['url']
-                if ReviewAgent().run(s,draft,output,card): mode='live'
+                if guard_reply(s,draft,output,card) and ReviewAgent().run(s,draft,output,card): mode='live'
                 else: output=fallback; mode='fallback'
             except Exception as error:
                 if isinstance(error, ModelError): s.extra['provider_error'] = str(error)

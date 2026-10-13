@@ -98,6 +98,7 @@ class LocalProvider(BaseHTTPRequestHandler):
         if 'classify risk' in system: text = json.dumps({'english': 'I feel worried', 'risk': 'ordinary'})
         elif 'Supervisor agent' in system: text = json.dumps({'action': 'reflect'})
         elif 'Review agent' in system: text = json.dumps({'pass': True})
+        elif 'safety reviewer' in system: text = json.dumps({'verdict': 'allow', 'categories': []})
         else: text = 'That sounds difficult. What is worrying you today?'
         encoded = json.dumps({'choices': [{'message': {'content': text}}]}).encode()
         self.send_response(200); self.send_header('Content-Length', str(len(encoded))); self.end_headers(); self.wfile.write(encoded)
@@ -123,8 +124,8 @@ class ModelHttpTests(unittest.TestCase):
         LocalProvider.calls.clear()
         result = self.post('/api/message', {'text': 'I feel worried', 'model_config': config})
         self.assertEqual(result['mode'], 'live')
-        self.assertEqual([x['agent'] for x in result['agent_trace']], ['Language','Safety','Supervisor','Emotional support','Review'])
-        self.assertEqual(len(LocalProvider.calls), 4)
+        self.assertEqual([x['agent'] for x in result['agent_trace']], ['Language','Safety','Supervisor','Emotional support','Guard','Review'])
+        self.assertEqual(len(LocalProvider.calls), 5)
         self.assertTrue(all(model == 'device-model' for _, model, _ in LocalProvider.calls))
         self.assertTrue(all(key == 'Bearer secret' for _, _, key in LocalProvider.calls))
         self.post('/api/model/test', {})

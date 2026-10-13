@@ -26,6 +26,8 @@ class FakeSafeModel(ModelClient):
             return '{"english":"I feel worried about tomorrow","risk":"ordinary"}'
         if "Check whether the final answer" in system:
             return '{"pass":true}'
+        if "safety reviewer" in system:
+            return '{"verdict":"allow","categories":[]}'
         return "That sounds hard. What would help you feel supported today?"
 
 

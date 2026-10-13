@@ -53,6 +53,32 @@ hashing and hashed session tokens; redirect rejection and credential isolation o
 endpoints; audit trail; consent-gated sharing; magic-byte checks on uploads; the offline
 and demo fallbacks.
 
+## 2a. Progress
+
+| Phase | State |
+|-------|-------|
+| 0 Safety net | done: safety corpus (66 labelled cases), API contract tests, `ruff`/`pytest` config |
+| 1 Dangerous fixes | done: S1, S2, X1-X4 |
+| 2 Safety module | done: `sahay/domain/safety` (normalisation, typo repair, wider multilingual rules), S3 closed on the corpus |
+| 2b Output guard | done: `sahay/domain/guard`, see below |
+| 3 API layer | in progress |
+| 4-6 | not started |
+
+### Output guard (added after plan review)
+
+Before this, the only check on model text was a regex list plus a Review agent that was the
+same model grading its own work. Every model-written string now also passes, in order:
+
+1. **deterministic**: forbidden claims per language, unapproved phone numbers, dose-like quantities, unlisted URLs;
+2. **similarity**: offline character n-gram match against a bank of prohibited statements in all four languages;
+3. **judge**: an independent model (`SAHAY_GUARD_LLM_*`, falling back to the main model and saying so in the trace) that sees the reply only as quoted data.
+
+Contract: any failure or unclear verdict blocks and the user sees curated fixed copy. No layer
+edits model text. Measured limits, all covered by tests: the offline layers catch restatements
+and close paraphrases only (threshold 0.65, chosen so ordinary advice like "talk with your care
+team about your worries" is not blocked); real paraphrase and meaning checks depend on the judge.
+Exemplars in hi/bn/ta need native-speaker review.
+
 ## 3. Target architecture
 
 ```
