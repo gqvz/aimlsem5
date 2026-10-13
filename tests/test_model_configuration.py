@@ -126,7 +126,8 @@ class ModelHttpTests(unittest.TestCase):
         self.api.should_exit = True; time.sleep(0.2)
         self.env.stop(); self.tmp.cleanup()
         self.provider.shutdown(); self.provider.server_close()
-        from sahay import db; db.dispose_all()
+        from sahay import db
+        db.dispose_all()
     def post(self, path, payload):
         request = urllib.request.Request(f'http://127.0.0.1:{self.api_port}'+path, json.dumps(payload).encode(), {'Content-Type': 'application/json'})
         with urllib.request.urlopen(request, timeout=5) as response: return json.load(response)
