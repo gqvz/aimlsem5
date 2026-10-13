@@ -18,7 +18,7 @@ flowchart TB
     subgraph Docker["Local Docker deployment"]
         API["Python HTTP API — server.py"]
         Graph["Eight-agent task graph — agents.py"]
-        Accounts["Accounts and consent — bookkeeping.py"]
+        Accounts["Accounts and consent — sahay/services/accounts.py, shares.py"]
         Care["Care messages and files — care.py"]
         Speech["STT/TTS adapters — speech.py"]
         DB[("SQLite in persistent /data volume")]

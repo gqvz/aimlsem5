@@ -1,16 +1,21 @@
 """Exercise model switching, secret boundaries and real local HTTP routing."""
 import io
 import json
+import tempfile
 import threading
+import time
 import unittest
 import urllib.error
 import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
 from unittest.mock import patch
-from engine import (ModelClient, ModelError, MODEL_OPENER, model_for_request,
-                    test_model_connection as check_model_connection,
-                    public_model_configuration, respond)
-from server import SahayHandler
+
+import uvicorn
+
+from engine import MODEL_OPENER, ModelClient, ModelError, model_for_request, public_model_configuration, respond
+from engine import test_model_connection as check_model_connection
+from sahay.api.app import create_app
 
 ENV = {'LLM_API_URL': 'https://provider.test/v1/chat/completions',
        'LLM_MODEL': 'default', 'LLM_API_KEY': 'test-backend-secret',
@@ -107,16 +112,23 @@ class ModelHttpTests(unittest.TestCase):
     def setUp(self):
         LocalProvider.calls = []
         self.provider = ThreadingHTTPServer(('127.0.0.1', 0), LocalProvider)
-        self.api = ThreadingHTTPServer(('127.0.0.1', 0), SahayHandler)
-        for server in (self.provider, self.api): threading.Thread(target=server.serve_forever, daemon=True).start()
+        threading.Thread(target=self.provider.serve_forever, daemon=True).start()
         self.url = f'http://127.0.0.1:{self.provider.server_port}/chat'
-        self.env = patch.dict('os.environ', {'LLM_API_URL': self.url, 'LLM_MODEL': 'default', 'LLM_API_KEY': 'secret'}, clear=True)
+        self.tmp = tempfile.TemporaryDirectory()
+        self.env = patch.dict('os.environ', {'LLM_API_URL': self.url, 'LLM_MODEL': 'default', 'LLM_API_KEY': 'secret',
+                                             'SAHAY_DB_PATH': str(Path(self.tmp.name) / 'm.sqlite3')}, clear=True)
         self.env.start()
+        self.api = uvicorn.Server(uvicorn.Config(create_app(), host='127.0.0.1', port=0, log_level='warning'))
+        threading.Thread(target=self.api.run, daemon=True).start()
+        while not self.api.started: time.sleep(0.02)
+        self.api_port = self.api.servers[0].sockets[0].getsockname()[1]
     def tearDown(self):
-        self.env.stop()
-        for server in (self.api, self.provider): server.shutdown(); server.server_close()
+        self.api.should_exit = True; time.sleep(0.2)
+        self.env.stop(); self.tmp.cleanup()
+        self.provider.shutdown(); self.provider.server_close()
+        from sahay import db; db.dispose_all()
     def post(self, path, payload):
-        request = urllib.request.Request(f'http://127.0.0.1:{self.api.server_port}'+path, json.dumps(payload).encode(), {'Content-Type': 'application/json'})
+        request = urllib.request.Request(f'http://127.0.0.1:{self.api_port}'+path, json.dumps(payload).encode(), {'Content-Type': 'application/json'})
         with urllib.request.urlopen(request, timeout=5) as response: return json.load(response)
     def test_http_switch_reaches_every_agent_and_preserves_backend_default(self):
         config = {'url': self.url, 'model': 'device-model'}

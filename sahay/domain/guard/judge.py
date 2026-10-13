@@ -28,7 +28,7 @@ class Completer(Protocol):
 
 def parse_verdict(raw: str) -> tuple[bool, list[str]] | None:
     """Return (allowed, categories) or None when the reply is not a clear verdict."""
-    match = re.search(r"\{.*\}", raw or "", re.S)
+    match = re.search(r"\{.*\}", raw or "", re.DOTALL)
     if not match:
         return None
     try:

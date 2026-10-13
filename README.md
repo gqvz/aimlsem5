@@ -25,7 +25,7 @@ The Android app includes Stitch-inspired role entry, patient registration/sign-i
 Create fictional admin and clinician accounts once, then open the Android app:
 
 ```bash
-python3 bookkeeping.py seed-demo > .demo-credentials
+python3 -m sahay.cli seed-demo > .demo-credentials
 chmod 600 .demo-credentials
 ```
 
@@ -96,7 +96,7 @@ The backend now uses the eight-agent graph in [agents.py](agents.py), with separ
 
 ```bash
 docker compose up -d --build
-docker compose exec -T backend python bookkeeping.py seed-demo > .demo-credentials
+docker compose exec -T backend python -m sahay.cli seed-demo > .demo-credentials
 chmod 600 .demo-credentials
 docker compose logs --tail 20 backend
 ```

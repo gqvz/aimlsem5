@@ -6,3 +6,9 @@ testpaths = ["tests"]
 line-length = 140
 target-version = "py312"
 extend-exclude = ["android", "graphify-out", "web", ".venv"]
+
+[tool.ruff.lint]
+extend-ignore = ["B008"]  # FastAPI's Depends() in defaults is the documented idiom
+
+[tool.ruff.lint.per-file-ignores]
+"sahay/domain/safety/rules.py" = ["ISC004"]  # adjacent string literals are one regex, on purpose

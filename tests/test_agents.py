@@ -1,7 +1,9 @@
 """Verify model delegation, bounded tools, review veto and urgent short circuit."""
 import json
 import unittest
+
 from engine import ModelClient, respond
+
 
 class SpecialistModel(ModelClient):
     def __init__(self, selected='activities', unsafe=False):
@@ -51,10 +53,12 @@ class AgentTests(unittest.TestCase):
 class CatalogueParityTests(unittest.TestCase):
     """Every activity the Android app lists must exist in the backend catalogue, and vice versa."""
     def test_android_entries_match_backend_catalogue(self):
-        import re, pathlib
+        import pathlib
+        import re
+
         from agents import ACTIVITIES
         src = (pathlib.Path(__file__).parent.parent / 'android/app/src/main/java/org/sahay/app/WellbeingUi.kt').read_text()
         listed = set(re.findall(r'ActivityEntry\("(\w+)"', src))
-        routed = set(re.findall(r'^\s+"(\w+)" -> \w+Activity\(', src, re.M))
+        routed = set(re.findall(r'^\s+"(\w+)" -> \w+Activity\(', src, re.MULTILINE))
         self.assertEqual(listed, set(ACTIVITIES))
         self.assertEqual(listed, routed)

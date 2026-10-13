@@ -4,8 +4,10 @@ import io
 import json
 import unittest
 from unittest.mock import patch
-import speech
-from bookkeeping import ApiError
+
+from sahay.errors import ApiError
+from sahay.providers import speech
+
 
 class SpeechTests(unittest.TestCase):
     def test_unconfigured_provider_is_explicit(self):

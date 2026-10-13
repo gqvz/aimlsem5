@@ -34,6 +34,7 @@ def test_every_language_is_covered():
 def test_patterns_use_only_their_own_script():
     """S1 guard: an alternative must not mix Latin/Devanagari/Bengali/Tamil letters."""
     import unicodedata
+
     from sahay.domain.safety import CRISIS_PATTERNS, DEPENDENCY_PATTERNS, MEDICAL_PATTERNS, MEDICAL_REQUEST_PATTERNS
     def script(ch):
         name = unicodedata.name(ch, "")

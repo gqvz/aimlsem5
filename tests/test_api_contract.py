@@ -3,7 +3,8 @@
 These run against the real handler. Phase 3 of REWRITE_PLAN.md (FastAPI) must keep every
 test here passing unchanged.
 """
-import bookkeeping
+from sahay import db as sahay_db
+from sahay.services import accounts
 
 
 def register(api, contact="asha@example.test", name="Asha Demo", language="en"):
@@ -14,11 +15,12 @@ def register(api, contact="asha@example.test", name="Asha Demo", language="en"):
 
 
 def make_clinician(api, contact="meera@example.test"):
-    with bookkeeping.connection() as db:
-        user = bookkeeping._create_user(db, "Dr. Meera Rao", contact, "ClinicianPass123", "clinician")
+    with sahay_db.session_scope() as db:
+        user = accounts.create_user(db, "Dr. Meera Rao", contact, "ClinicianPass123", "clinician")
+        user_id = user.id
     status, body = api.call("POST", "/api/auth/login", {"contact": contact, "password": "ClinicianPass123"})
     assert status == 200
-    return body["token"], user["id"]
+    return body["token"], user_id
 
 
 def test_health_shape(api):
@@ -147,8 +149,9 @@ def test_login_throttle_after_repeated_failures_and_reset_on_success(api):
 
 def test_expired_sessions_are_pruned(api):
     token, user = register(api)
-    with bookkeeping.connection() as db:
-        db.execute("UPDATE sessions SET expires_at='2000-01-01T00:00:00+00:00'")
+    from sqlalchemy import text
+    with sahay_db.session_scope() as db:
+        db.execute(text("UPDATE sessions SET expires_at='2000-01-01T00:00:00+00:00'"))
     api.call("POST", "/api/auth/login", {"contact": "asha@example.test", "password": "PatientPass123"})
-    with bookkeeping.connection() as db:
-        assert db.execute("SELECT count(*) FROM sessions WHERE expires_at<'2001'").fetchone()[0] == 0
+    with sahay_db.session_scope() as db:
+        assert db.execute(text("SELECT count(*) FROM sessions WHERE expires_at<'2001'")).scalar() == 0

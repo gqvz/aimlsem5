@@ -1,12 +1,14 @@
 import tempfile
 import threading
-from http.server import ThreadingHTTPServer
+import time
 from pathlib import Path
 
 import pytest
+import uvicorn
 
-import bookkeeping
-import server
+from sahay import db as sahay_db
+from sahay.api import deps
+from sahay.api.app import create_app
 
 
 class Api:
@@ -41,19 +43,24 @@ class Api:
 
 @pytest.fixture()
 def api(monkeypatch):
+    """A real server on an ephemeral port, backed by a throwaway database."""
     with tempfile.TemporaryDirectory() as temp:
-        monkeypatch.setattr(bookkeeping, "DB_PATH", Path(temp) / "test.sqlite3")
-        for name in ("LLM_API_URL", "LLM_API_KEY", "LLM_MODEL", "STT_API_URL", "TTS_API_URL", "SAHAY_MODEL_ALLOWLIST"):
+        monkeypatch.setenv("SAHAY_DB_PATH", str(Path(temp) / "test.sqlite3"))
+        for name in ("LLM_API_URL", "LLM_API_KEY", "LLM_MODEL", "STT_API_URL", "TTS_API_URL",
+                     "SAHAY_MODEL_ALLOWLIST", "SAHAY_TRUST_PROXY", "SAHAY_GUARD_LLM_API_URL", "SAHAY_GUARD_LLM_MODEL"):
             monkeypatch.delenv(name, raising=False)
-        server.LIMITER._hits.clear()
-        bookkeeping.init_db()
-        import care
-        care.init_care()
-        httpd = ThreadingHTTPServer(("127.0.0.1", 0), server.SahayHandler)
-        thread = threading.Thread(target=httpd.serve_forever, daemon=True)
+        deps.LIMITER._hits.clear()
+        server = uvicorn.Server(uvicorn.Config(create_app(), host="127.0.0.1", port=0, log_level="warning", lifespan="on"))
+        thread = threading.Thread(target=server.run, daemon=True)
         thread.start()
+        deadline = time.time() + 10
+        while not server.started and time.time() < deadline:
+            time.sleep(0.02)
+        assert server.started, "server did not start"
+        port = server.servers[0].sockets[0].getsockname()[1]
         try:
-            yield Api(f"http://127.0.0.1:{httpd.server_address[1]}")
+            yield Api(f"http://127.0.0.1:{port}")
         finally:
-            httpd.shutdown()
-            httpd.server_close()
+            server.should_exit = True
+            thread.join(timeout=5)
+            sahay_db.dispose_all()
