@@ -1,0 +1,86 @@
+[
+  {
+    "id": "breathing",
+    "title": "Gentle breathing",
+    "minutes": 2,
+    "energy": "low"
+  },
+  {
+    "id": "grounding",
+    "title": "Notice your surroundings",
+    "minutes": 2,
+    "energy": "low"
+  },
+  {
+    "id": "meditation",
+    "title": "A quiet moment",
+    "minutes": 3,
+    "energy": "low"
+  },
+  {
+    "id": "sound",
+    "title": "Sound sanctuary",
+    "minutes": 5,
+    "energy": "low"
+  },
+  {
+    "id": "memory",
+    "title": "Garden pairs",
+    "minutes": 3,
+    "energy": "medium"
+  },
+  {
+    "id": "stretch",
+    "title": "Gentle stretch",
+    "minutes": 3,
+    "energy": "low"
+  },
+  {
+    "id": "art",
+    "title": "Colour your own sky",
+    "minutes": 5,
+    "energy": "medium"
+  },
+  {
+    "id": "bodyscan",
+    "title": "A slow body scan",
+    "minutes": 4,
+    "energy": "low"
+  },
+  {
+    "id": "safeplace",
+    "title": "A safe place",
+    "minutes": 3,
+    "energy": "low"
+  },
+  {
+    "id": "winddown",
+    "title": "Wind down for sleep",
+    "minutes": 15,
+    "energy": "low"
+  },
+  {
+    "id": "comforts",
+    "title": "Small comforts",
+    "minutes": 2,
+    "energy": "low"
+  },
+  {
+    "id": "worry",
+    "title": "Worry box",
+    "minutes": 3,
+    "energy": "low"
+  },
+  {
+    "id": "journal",
+    "title": "A few words for today",
+    "minutes": 3,
+    "energy": "low"
+  },
+  {
+    "id": "peers",
+    "title": "Small words of support",
+    "minutes": 1,
+    "energy": "low"
+  }
+]

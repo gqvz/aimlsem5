@@ -63,8 +63,15 @@ and demo fallbacks.
 | 2b Output guard | done: `sahay/domain/guard`, see below |
 | 3 API layer | done: FastAPI + SQLAlchemy + Alembic behind the same URLs; legacy handlers removed; OpenAPI snapshot in `contract/openapi.json` |
 | 4 Pipeline | done: `sahay/domain/pipeline.py`; ordinary turn is 3 model calls (was up to 6), one shared deadline, guard + review merged into one judge call |
-| 5 Android non-UI layers | not started (see note) |
-| 6 Content as data | not started |
+| 5 Android non-UI layers | data layer done and tested (`data/` package, 19 JVM tests on real backend fixtures); wiring it into the view model is deliberately held for the UI integration, see below |
+| 6 Content as data | done: `content/*.json`, `/api/content`, `CONTENT_VERSION`; Android bundling of the snapshot waits for the UI integration |
+
+### Why the view model is not rewired yet
+
+`SahayViewModel` is both the state holder and the only caller of the old networking. It
+will be split by feature when the new UI is wired, so the screens and their state holders
+are built together once, against the new `data/` repositories. Doing it now would mean
+rewriting 25 call sites twice and changing the surface the redesign is being built against.
 
 ### Output guard (added after plan review)
 

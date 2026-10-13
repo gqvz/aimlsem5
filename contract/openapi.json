@@ -818,6 +818,26 @@
         "summary": "Clinicians"
       }
     },
+    "/api/content": {
+      "get": {
+        "operationId": "content_bundle_api_content_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Content Bundle Api Content Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Content Bundle"
+      }
+    },
     "/api/health": {
       "get": {
         "operationId": "health_api_health_get",

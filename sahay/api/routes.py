@@ -6,6 +6,7 @@ from typing import Any
 from fastapi import APIRouter, Depends, Header, Request, Response
 from sqlalchemy.orm import Session
 
+from sahay.domain.content import bundle
 from engine import LANGS, SOURCES, ModelClient, public_model_configuration, respond, test_model_connection
 
 from ..db import get_session
@@ -45,6 +46,11 @@ def health() -> dict[str, Any]:
 @router.get("/cards")
 def cards() -> dict[str, Any]:
     return {"cards": [{"id": key, **value} for key, value in SOURCES.items()]}
+
+
+@router.get("/content")
+def content_bundle() -> dict[str, Any]:
+    return bundle()
 
 
 @router.post("/message", dependencies=[Depends(throttle("message"))])

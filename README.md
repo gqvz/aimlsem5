@@ -10,11 +10,18 @@ See [android/README.md](android/README.md) for APK build, emulator, device, and 
 
 ## Run the web prototype and backend
 
-Requires Python 3.10+ and a modern browser. No Python packages or build step are required.
+Requires Python 3.12+ and a modern browser.
 
 ```bash
+python3 -m venv .venv && . .venv/bin/activate
+pip install -r requirements.txt
 python3 server.py
 ```
+
+For development (tests, lint): `pip install -r requirements-dev.txt && pytest`. The database
+schema is managed by Alembic and applied automatically at start-up; an existing database from
+an earlier version is adopted without changes. `python -m sahay.cli openapi` prints the API
+document that is checked in at `contract/openapi.json`.
 
 Open <http://127.0.0.1:8000/>. The server binds to localhost by default. To use another port, set `SAHAY_PORT`; to access it from another device on your own network, set `SAHAY_HOST=0.0.0.0` and use the host machine's address. Account sessions and consented shares are stored in a local SQLite database, but this development server has no TLS; keep it on localhost or a trusted test network and use fictional accounts only.
 
@@ -141,3 +148,30 @@ docker compose -f compose.yaml -f compose.kratos.yaml up -d --build
 ```
 
 The bridge streams each private Docker connection through the existing SSH master to remote loopback port 11434. It mounts the mux socket, requires no loaded key, and publishes no model port. The socket grants access to that SSH session: keep it limited to this trusted bridge. Closing the master breaks the connection; after reconnecting, update `SAHAY_SSH_MUX` and recreate `model-tunnel` with the same Compose files. There is no automatic new SSH login when the master disappears. Android Settings → **Use backend default** clears any old per-device provider selection.
+
+
+## Code layout
+
+| Path | Purpose |
+|------|---------|
+| `sahay/api/` | FastAPI app, routes, request guards (size limits, rate limits, auth dependencies) |
+| `sahay/services/` | Accounts, sharing and care conversations; every function takes the acting user |
+| `sahay/domain/safety/` | Deterministic risk assessment: the only place urgency is decided |
+| `sahay/domain/guard/` | Output guard: deterministic claims, offline similarity, independent judge; fail-closed |
+| `sahay/domain/pipeline.py` | One turn: understand, safety, route, draft, localise, verify, with a shared deadline |
+| `sahay/providers/` | LLM and speech clients (endpoint allow-list, no logging of bodies) |
+| `content/` | Reviewed copy, sources and the activity catalogue as versioned JSON |
+| `alembic/` | Database migrations |
+| `contract/openapi.json` | The public API document; a diff is an API change |
+| `tools/export_contract_fixtures.py` | Writes real responses the Android tests parse |
+| `android/.../data/` | Typed API client, models and repositories (no UI dependencies) |
+
+### Model configuration
+
+| Variable | Meaning |
+|----------|---------|
+| `LLM_API_URL`, `LLM_MODEL`, `LLM_API_KEY` | The reply model (OpenAI-compatible) |
+| `SAHAY_GUARD_LLM_API_URL`, `SAHAY_GUARD_LLM_MODEL`, `SAHAY_GUARD_LLM_API_KEY` | A separate model that reviews every reply (recommended) |
+| `SAHAY_MODEL_ALLOWLIST` | Extra endpoints a device may select, `host[:port]` list |
+| `SAHAY_TURN_DEADLINE` | Seconds one turn may spend on model calls (default 45) |
+| `SAHAY_TRUST_PROXY=1` | Use `X-Forwarded-For` for rate limits behind a trusted proxy |

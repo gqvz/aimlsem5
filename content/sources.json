@@ -1,0 +1,42 @@
+{
+  "feelings": {
+    "title": "Emotions and Cancer — National Cancer Institute",
+    "url": "https://www.cancer.gov/about-cancer/coping/feelings",
+    "summary": "Cancer can bring up many emotions. A nurse or hospital social worker can help you find emotional and practical support.",
+    "summary_translations": {
+      "hi": "कैंसर के साथ कई तरह की भावनाएँ आ सकती हैं। अस्पताल की नर्स या सामाजिक कार्यकर्ता भावनात्मक और व्यावहारिक सहायता ढूँढ़ने में मदद कर सकते हैं।",
+      "bn": "ক্যানসারের সঙ্গে নানা অনুভূতি আসতে পারে। হাসপাতালের নার্স বা সমাজকর্মী মানসিক ও বাস্তব সহায়তা খুঁজতে সাহায্য করতে পারেন।",
+      "ta": "புற்றுநோயுடன் பல உணர்ச்சிகள் வரலாம். மருத்துவமனை செவிலியர் அல்லது சமூகப் பணியாளர் உணர்ச்சி மற்றும் நடைமுறை ஆதரவைக் கண்டுபிடிக்க உதவலாம்."
+    }
+  },
+  "relaxation": {
+    "title": "Meditation and Relaxation for Your Mind and Body — National Cancer Institute",
+    "url": "https://www.cancer.gov/about-cancer/coping/feelings/relaxation",
+    "summary": "Some people with cancer use relaxation or mindfulness practices to cope with stress and anxiety. Choose an approach that feels comfortable to you.",
+    "summary_translations": {
+      "hi": "कुछ लोग तनाव और चिंता से निपटने के लिए विश्राम या ध्यान का उपयोग करते हैं। जो तरीका सहज लगे वही चुनें।",
+      "bn": "কেউ কেউ চাপ ও উদ্বেগ সামলাতে বিশ্রাম বা মননচর্চা ব্যবহার করেন। আপনার স্বচ্ছন্দ উপায়টি বেছে নিন।",
+      "ta": "சிலர் மன அழுத்தத்தையும் கவலையையும் சமாளிக்க ஓய்வு அல்லது மனக்குவிப்பைப் பயன்படுத்துகிறார்கள். உங்களுக்கு ஏற்றதைத் தேர்ந்தெடுக்கவும்."
+    }
+  },
+  "communication": {
+    "title": "Communication in Cancer Care — National Cancer Institute",
+    "url": "https://www.cancer.gov/about-cancer/coping/adjusting-to-cancer/communication-pdq",
+    "summary": "Writing down concerns and asking the care team questions can make it easier to discuss what matters to you during a visit.",
+    "summary_translations": {
+      "hi": "अपनी चिंताएँ और सवाल लिखकर रखने से मुलाकात में महत्वपूर्ण बातों पर चर्चा करना आसान हो सकता है।",
+      "bn": "উদ্বেগ ও প্রশ্ন লিখে রাখলে চিকিৎসা সাক্ষাতে গুরুত্বপূর্ণ কথা বলা সহজ হতে পারে।",
+      "ta": "கவலைகளையும் கேள்விகளையும் எழுதிவைத்தால் சிகிச்சைச் சந்திப்பில் முக்கியமானவற்றைப் பேச எளிதாகலாம்."
+    }
+  },
+  "infection": {
+    "title": "Infection and Neutropenia during Cancer Treatment — National Cancer Institute",
+    "url": "https://www.cancer.gov/about-cancer/treatment/side-effects/infection",
+    "summary": "Some cancer treatments increase infection risk. Contact your health care team if you have signs of infection, including fever.",
+    "summary_translations": {
+      "hi": "कुछ कैंसर उपचार संक्रमण का जोखिम बढ़ा सकते हैं। बुखार सहित संक्रमण के लक्षण हों तो अपनी देखभाल टीम से संपर्क करें।",
+      "bn": "কিছু ক্যানসার চিকিৎসায় সংক্রমণের ঝুঁকি বাড়তে পারে। জ্বরসহ সংক্রমণের লক্ষণ থাকলে চিকিৎসা দলের সঙ্গে যোগাযোগ করুন।",
+      "ta": "சில புற்றுநோய் சிகிச்சைகள் தொற்று அபாயத்தை அதிகரிக்கலாம். காய்ச்சல் உள்ளிட்ட தொற்று அறிகுறிகள் இருந்தால் சிகிச்சைக் குழுவைத் தொடர்புகொள்ளுங்கள்."
+    }
+  }
+}

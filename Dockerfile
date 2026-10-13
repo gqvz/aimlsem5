@@ -7,6 +7,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY --chown=sahay:sahay engine.py agents.py server.py alembic.ini ./
 COPY --chown=sahay:sahay sahay ./sahay
 COPY --chown=sahay:sahay alembic ./alembic
+COPY --chown=sahay:sahay content ./content
 COPY --chown=sahay:sahay web ./web
 USER sahay
 EXPOSE 8000
