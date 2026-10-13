@@ -8,7 +8,11 @@ target-version = "py312"
 extend-exclude = ["android", "graphify-out", "web", ".venv"]
 
 [tool.ruff.lint]
-extend-ignore = ["B008"]  # FastAPI's Depends() in defaults is the documented idiom
+extend-ignore = [
+  "B008",    # FastAPI's Depends() in defaults is the documented idiom
+  "TRY004",  # ValueError is the contract: the API maps it to a 400 with the message
+]
 
 [tool.ruff.lint.per-file-ignores]
 "sahay/domain/safety/rules.py" = ["ISC004"]  # adjacent string literals are one regex, on purpose
+"tests/*" = ["RUF059", "RUF012"]

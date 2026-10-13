@@ -1,0 +1,29 @@
+name: ci
+on: [push, pull_request]
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -r requirements-dev.txt
+      - run: ruff check sahay tests server.py engine.py tools
+      - run: pytest -q
+      - name: API document is current
+        run: python -m sahay.cli openapi | diff - contract/openapi.json
+      - name: Android contract fixtures are current
+        run: |
+          python tools/export_contract_fixtures.py
+          git diff --exit-code android/app/src/test/resources/contract
+
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: "17" }
+      - uses: gradle/actions/setup-gradle@v4
+      - run: ./gradlew :app:testDebugUnitTest
+        working-directory: android

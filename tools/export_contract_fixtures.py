@@ -22,11 +22,11 @@ os.environ["SAHAY_DB_PATH"] = str(Path(tempfile.mkdtemp()) / "fixtures.sqlite3")
 for name in ("LLM_API_URL", "LLM_MODEL", "LLM_API_KEY", "STT_API_URL", "TTS_API_URL"):
     os.environ.pop(name, None)
 
-import uvicorn  # noqa: E402
+import uvicorn
 
-from sahay import db  # noqa: E402
-from sahay.api.app import create_app  # noqa: E402
-from sahay.services import accounts  # noqa: E402
+from sahay import db
+from sahay.api.app import create_app
+from sahay.services import accounts
 
 server = uvicorn.Server(uvicorn.Config(create_app(), host="127.0.0.1", port=0, log_level="error"))
 threading.Thread(target=server.run, daemon=True).start()
