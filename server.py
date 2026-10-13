@@ -11,13 +11,34 @@ from urllib.parse import urlsplit
 from bookkeeping import ApiError, handle as handle_bookkeeping, init_db
 from care import handle as handle_care, init_care, attachment
 from speech import status as speech_status, transcribe, synthesize
+from ratelimit import LIMITS, RateLimiter
 from engine import LANGS, ModelClient, SOURCES, respond, test_model_connection, public_model_configuration
 
 
 WEB_ROOT = Path(__file__).with_name("web")
+LIMITER = RateLimiter()
+TRUST_PROXY = os.getenv("SAHAY_TRUST_PROXY") == "1"
 
 
 class SahayHandler(SimpleHTTPRequestHandler):
+    # Bound how long a client may hold a worker thread while sending a request.
+    timeout = 30
+
+    def _client(self) -> str:
+        if TRUST_PROXY:
+            forwarded = self.headers.get("X-Forwarded-For", "").split(",")[0].strip()
+            if forwarded:
+                return forwarded
+        return self.client_address[0]
+
+    def _throttled(self, bucket: str, key: str | None = None) -> bool:
+        limit, window = LIMITS[bucket]
+        wait = LIMITER.check(f"{bucket}:{key or self._client()}", limit, window)
+        if wait:
+            self._json(429, {"error": "Too many requests. Please wait a moment and try again.", "retry_after": int(wait) + 1})
+            return True
+        return False
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=str(WEB_ROOT), **kwargs)
 
@@ -90,9 +111,21 @@ class SahayHandler(SimpleHTTPRequestHandler):
             if length < 1 or length > limit:
                 self._json(413, {"error": "Message is too large or empty"})
                 return
+            bucket = ("model_test" if path == "/api/model/test" else "speech" if path.startswith("/api/speech/")
+                      else "message" if path == "/api/message" else "register" if path == "/api/auth/register" else None)
+            if bucket and self._throttled(bucket):
+                return
             data = json.loads(self.rfile.read(length))
             if not isinstance(data, dict):
                 raise ValueError("Expected a JSON object")
+            login_key = None
+            if path == "/api/auth/login":
+                login_key = f"login_failures:{self._client()}:{str(data.get('contact', '')).lower()[:160]}"
+                limit, window = LIMITS["login_failures"]
+                wait = LIMITER.peek(login_key, limit, window)
+                if wait:
+                    self._json(429, {"error": "Too many sign-in attempts. Please wait before trying again.", "retry_after": int(wait) + 1})
+                    return
             if path == "/api/model/test":
                 self._json(200, test_model_connection(data))
                 return
@@ -106,8 +139,15 @@ class SahayHandler(SimpleHTTPRequestHandler):
             if result is not None:
                 self._json(*result)
                 return
-            result = handle_bookkeeping("POST", path, data, self.headers.get("Authorization", ""))
+            try:
+                result = handle_bookkeeping("POST", path, data, self.headers.get("Authorization", ""))
+            except ApiError as error:
+                if login_key and error.status == 401:
+                    LIMITER.record(login_key)
+                raise
             if result is not None:
+                if login_key:
+                    LIMITER.reset(login_key)
                 self._json(*result)
                 return
             result = respond(data)

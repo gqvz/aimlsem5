@@ -87,7 +87,7 @@ MEDICAL_REQUEST_PATTERNS = [
     r"\b(?:which|what) (?:medicine|medication|treatment) (?:should|can) i\b",
     r"\bwill (?:chemo|treatment|this medicine|this medication) (?:cure|work)\b",
     r"\b(?:kitna mg|dawai ki khurak|dava ki khurak)\b",
-    r"दवा की खुराक|कितनी खुराक|ओষুধের মাত্রা|எவ்வளவு மருந்து",
+    r"दवा की खुराक|कितनी खुराक|ওষুধের মাত্রা|எவ்வளவு மருந்து",
 ]
 
 FALLBACK = {
@@ -252,8 +252,24 @@ class ModelClient:
         return content.strip()
 
 
+def allowed_model_hosts() -> set[str]:
+    """Hosts a request may select. Defaults to the server's own configured endpoint only.
+
+    Letting callers aim the server at arbitrary URLs is server-side request forgery, so
+    operators opt in with SAHAY_MODEL_ALLOWLIST=host[:port],host[:port].
+    """
+    hosts = {h.strip().lower() for h in os.getenv("SAHAY_MODEL_ALLOWLIST", "").split(",") if h.strip()}
+    try:
+        configured = urlsplit(os.getenv("LLM_API_URL", ""))
+        if configured.hostname:
+            hosts.add((configured.netloc.rsplit("@", 1)[-1]).lower())
+    except ValueError:
+        pass
+    return hosts
+
+
 def model_for_request(data: dict[str, Any]) -> ModelClient:
-    """Each device can select an endpoint without changing other devices' defaults."""
+    """A device may select a model endpoint only from the operator's allow-list."""
     default = ModelClient()
     config = data.get("model_config")
     if config is None:
@@ -273,6 +289,8 @@ def model_for_request(data: dict[str, Any]) -> ModelClient:
         raise ValueError("Use a complete http:// or https:// endpoint without embedded credentials, query or fragment")
     if not model or len(model) > 200 or any(ord(c) < 32 for c in model):
         raise ValueError("Enter a model name of at most 200 characters")
+    if parsed.netloc.lower() not in allowed_model_hosts():
+        raise ValueError("This model endpoint is not allowed by the server operator")
     # A URL change must never forward the configured provider's secret elsewhere.
     key = default.key if url.rstrip("/") == default.url.rstrip("/") else ""
     return ModelClient(url=url, model=model, key=key)
@@ -321,15 +339,46 @@ def _fallback_response(lang: str, action: str, card: dict[str, str] | None, card
     return FALLBACK[lang].get(action, FALLBACK[lang]["reflect"])
 
 
-def _passes_output_check(text: str, action: str, card: dict[str, str] | None) -> bool:
-    if len(text) > 1800 or not text.strip():
-        return False
-    forbidden = [
+# Claims a reply must never make, per reply language. The English list also runs on every
+# reply because models sometimes answer in English regardless of the requested language.
+FORBIDDEN_OUTPUT = {
+    "en": [
         r"\b(i (?:have )?alerted|your doctor (?:has been|was) notified|guaranteed cure)\b",
         r"\b(stop taking|increase your dose|decrease your dose|you definitely have)\b",
         r"\b(just breathe|you.ve got this|everything will be (?:fine|okay))\b",
-    ]
-    if _matches(text, forbidden):
+    ],
+    "hi": [
+        r"खुराक\s*(?:बढ़ा|घटा|कम\s*कर)",
+        r"दवा\s*(?:लेना\s*)?बंद\s*कर",
+        r"निश्चित\s*रूप\s*से\s*(?:आपको|आप)\s",
+        r"गारंटी|पक्का\s*इलाज",
+        r"सब\s*ठीक\s*हो\s*जाएगा",
+        r"(?:मैंने|हमने)\s*(?:आपके\s*)?(?:डॉक्टर|देखभाल\s*दल)\s*को\s*(?:सूचित|बता)",
+    ],
+    "bn": [
+        r"মাত্রা\s*(?:বাড়ান|কমান)",
+        r"ওষুধ\s*(?:খাওয়া\s*)?বন্ধ\s*করুন",
+        r"নিশ্চিতভাবে\s*আপনার",
+        r"গ্যারান্টি|নিশ্চিত\s*নিরাময়",
+        r"সব\s*ঠিক\s*হয়ে\s*যাবে",
+        r"(?:আমি|আমরা)\s*আপনার\s*(?:ডাক্তার|চিকিৎসা\s*দল)কে\s*(?:জানিয়েছি|জানিয়ে\s*দিয়েছি)",
+    ],
+    "ta": [
+        r"அளவை?\s*(?:அதிகரி|குறை)",
+        r"மருந்தை?\s*(?:சாப்பிடுவதை\s*)?நிறுத்து",
+        r"உறுதியாக\s*உங்களுக்கு",
+        r"உத்தரவாதம்|முழுமையான\s*குணம்",
+        r"எல்லாம்\s*சரியாகிவிடும்",
+        r"(?:நான்|நாங்கள்)\s*உங்கள்\s*(?:மருத்துவ(?:ர்|ரு)|சிகிச்சைக்\s*குழு)(?:க்கு|வுக்கு|விடம்)\s*தெரிவித்து",
+    ],
+}
+
+
+def _passes_output_check(text: str, action: str, card: dict[str, str] | None,
+                         lang: str = "en", require_card_url: bool = True) -> bool:
+    if len(text) > 1800 or not text.strip():
+        return False
+    if _matches(text, FORBIDDEN_OUTPUT["en"]) or _matches(text, FORBIDDEN_OUTPUT.get(lang, [])):
         return False
     if text.count("?") > (2 if action == "questions" else 1):
         return False
@@ -337,7 +386,7 @@ def _passes_output_check(text: str, action: str, card: dict[str, str] | None) ->
     allowed_urls = {card["url"]} if card else set()
     if any(url not in allowed_urls for url in urls):
         return False
-    if action == "info" and card and card["url"] not in text:
+    if require_card_url and action == "info" and card and card["url"] not in text:
         return False
     return True
 

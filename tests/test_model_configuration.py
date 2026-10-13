@@ -8,11 +8,13 @@ import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from unittest.mock import patch
 from engine import (ModelClient, ModelError, MODEL_OPENER, model_for_request,
-                    test_model_connection, public_model_configuration, respond)
+                    test_model_connection as check_model_connection,
+                    public_model_configuration, respond)
 from server import SahayHandler
 
 ENV = {'LLM_API_URL': 'https://provider.test/v1/chat/completions',
-       'LLM_MODEL': 'default', 'LLM_API_KEY': 'test-backend-secret'}
+       'LLM_MODEL': 'default', 'LLM_API_KEY': 'test-backend-secret',
+       'SAHAY_MODEL_ALLOWLIST': 'localhost:11434,other.test'}
 
 def wire(text):
     return io.BytesIO(json.dumps({'choices': [{'message': {'content': text}}]}).encode())
@@ -27,6 +29,24 @@ class ModelConfigurationTests(unittest.TestCase):
             self.assertEqual(model_for_request({}).model, 'default')
             self.assertEqual(a.model, 'gemma3:12b')
 
+    def test_endpoint_outside_the_allow_list_is_rejected(self):
+        """X1: callers must not be able to aim the server at arbitrary or internal hosts."""
+        with patch.dict('os.environ', ENV, clear=True), patch.object(MODEL_OPENER, 'open') as send:
+            for url in ['http://169.254.169.254/latest/meta-data', 'http://127.0.0.1:8000/api/admin/users',
+                        'http://localhost:9999/chat', 'https://evil.test/chat', 'http://10.0.0.5/v1/chat/completions']:
+                with self.subTest(url=url), self.assertRaises(ValueError):
+                    model_for_request({'model_config': {'url': url, 'model': 'm'}})
+            send.assert_not_called()
+
+    def test_without_an_allow_list_only_the_configured_endpoint_is_selectable(self):
+        env = {k: v for k, v in ENV.items() if k != 'SAHAY_MODEL_ALLOWLIST'}
+        with patch.dict('os.environ', env, clear=True):
+            self.assertEqual(model_for_request({'model_config': {'url': ENV['LLM_API_URL'], 'model': 'x'}}).model, 'x')
+            with self.assertRaises(ValueError):
+                model_for_request({'model_config': {'url': 'http://localhost:11434/v1/chat/completions', 'model': 'x'}})
+        with patch.dict('os.environ', {}, clear=True), self.assertRaises(ValueError):
+            model_for_request({'model_config': {'url': 'https://provider.test/chat', 'model': 'x'}})
+
     def test_invalid_configuration_is_rejected_before_network_calls(self):
         bad = [None, 'file:///etc/passwd', 'https://user:secret@provider.test/chat',
                'https://provider.test/chat?key=secret', 'https://provider.test/chat#frag',
@@ -39,7 +59,7 @@ class ModelConfigurationTests(unittest.TestCase):
 
     def test_connection_test_uses_selected_endpoint_and_actual_reply(self):
         with patch.dict('os.environ', ENV, clear=True), patch.object(MODEL_OPENER, 'open', return_value=wire('ready')) as send:
-            result = test_model_connection({'model_config': {'url': 'https://other.test/chat', 'model': 'chosen'}})
+            result = check_model_connection({'model_config': {'url': 'https://other.test/chat', 'model': 'chosen'}})
             request = send.call_args.args[0]
             self.assertTrue(result['ok']); self.assertEqual(request.full_url, 'https://other.test/chat')
             self.assertEqual(json.loads(request.data)['model'], 'chosen')
@@ -50,7 +70,7 @@ class ModelConfigurationTests(unittest.TestCase):
         payload = {'error': {'type': 'FreeTierError', 'message': 'test-backend-secret echoed text'}}
         error = urllib.error.HTTPError(ENV['LLM_API_URL'], 403, 'Forbidden', {}, io.BytesIO(json.dumps(payload).encode()))
         with patch.dict('os.environ', ENV, clear=True), patch.object(MODEL_OPENER, 'open', side_effect=error):
-            result = test_model_connection({})
+            result = check_model_connection({})
             self.assertFalse(result['ok']); self.assertIn('HTTP 403', result['error'])
             self.assertIn('restricted', result['error']); self.assertNotIn('test-backend-secret', str(result))
 

@@ -138,6 +138,7 @@ def _create_user(db: sqlite3.Connection, name: str, contact: str, password: str,
 
 
 def _session(db: sqlite3.Connection, user: sqlite3.Row) -> dict[str, Any]:
+    db.execute("DELETE FROM sessions WHERE expires_at<=?", (utc_now(),))  # prune expired sessions
     token = secrets.token_urlsafe(32)
     expires = (datetime.now(timezone.utc) + timedelta(hours=SESSION_HOURS)).isoformat(timespec="seconds")
     db.execute("INSERT INTO sessions(token_hash,user_id,expires_at,created_at) VALUES(?,?,?,?)",

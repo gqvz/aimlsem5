@@ -153,7 +153,8 @@ class KnowledgeAgent:
 class ReviewAgent:
     def run(self,s,draft,output,card):
         check=_json_object(s.client.chat('You are the Review agent. Check whether the final answer is faithful to the English draft and safe for a non-clinical emotional support assistant. Fail if it changes urgency or negation, gives medical advice, invents clinician contact or unsupported sources. Return JSON only: {"pass":true|false}.',f'English draft: {draft}\nFinal answer: {output}',70))
-        allowed=check.get('pass') is True and _passes_output_check(output,s.action,card)
+        allowed=(check.get('pass') is True and _passes_output_check(output,s.action,card,s.lang)
+                 and _passes_output_check(draft,s.action,card,'en',require_card_url=False))
         s.step('Review','approve_or_veto','approved' if allowed else 'vetoed','llm')
         return allowed
 
