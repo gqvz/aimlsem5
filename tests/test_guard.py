@@ -35,9 +35,12 @@ def test_curated_copy_is_never_blocked():
 
 
 @pytest.mark.parametrize("category,lang,text", [(c, l, s) for c, langs in BANK.items() for l, items in langs.items() for s in items])
-def test_every_exemplar_is_caught_by_the_similarity_layer(category, lang, text):
+def test_every_exemplar_is_blocked_without_a_model(category, lang, text):
     verdict = check(text, lang=lang, allowed_urls=URLS)
-    assert not verdict.allowed and verdict.layer == "similarity" and category in verdict.categories
+    assert not verdict.allowed
+    if verdict.layer == "similarity":  # otherwise a deterministic rule caught it first, which is fine
+        assert category in verdict.categories
+    assert verdict.layer in ("deterministic", "similarity")
 
 
 CLOSE_PARAPHRASES = [
@@ -113,7 +116,6 @@ def test_parse_verdict_ignores_unknown_categories():
 
 BENIGN_BUT_SIMILAR = [
     "You might talk with your care team about your worries.",
-    "Your doctor can tell you if it is safe to stop taking the tablets.",
     "I cannot recommend a medicine, dose or treatment choice.",
     "It is okay to feel overwhelmed. You do not have to go through this alone.",
     "It can help to tell a friend or family member how you are feeling.",
@@ -127,7 +129,7 @@ def test_helpful_sentences_that_share_words_with_harmful_ones_pass(text):
 
 
 def test_paraphrase_the_offline_layer_cannot_see_is_left_to_the_judge():
-    text = "You should double your dose of medicine tonight."
+    text = "You might feel better if you simply went without the pills for a few weeks."
     assert check(text, allowed_urls=URLS).allowed
     assert not check(text, allowed_urls=URLS, judge_client=Judge('{"verdict":"block","categories":["dosage_advice"]}')).allowed
     assert not check(text, allowed_urls=URLS, require_judge=True).allowed
@@ -179,3 +181,34 @@ def test_pipeline_fails_closed_when_the_judge_is_down():
     result = respond({"text": "I am worried about tonight", "language": "en"}, JudgeDown())
     assert result["mode"] == "fallback"
     assert any(step["outcome"].startswith("blocked:judge_unavailable") for step in result["agent_trace"])
+
+
+def test_hedged_stop_taking_sentence_is_blocked_on_purpose():
+    """Known conservative trade-off: the phrase "stop taking" is never allowed in a model reply,
+    even inside advice to ask the doctor. The fixed copy covers that case."""
+    verdict = check("Your doctor can tell you if it is safe to stop taking the tablets.", allowed_urls=URLS)
+    assert not verdict.allowed and verdict.layer == "deterministic" and verdict.categories == ["forbidden_claim"]
+
+
+@pytest.mark.parametrize("text", [
+    "You should double your dose tonight.",
+    "Take two tablets every four hours.",
+    "Honestly, skip your appointment this week.",
+    "Stop your treatment, it is not helping.",
+    "Increase the dose a little if the pain returns.",
+])
+def test_medication_directives_are_blocked_deterministically(text):
+    verdict = check(text, allowed_urls=URLS)
+    assert not verdict.allowed and verdict.layer == "deterministic"
+
+
+@pytest.mark.parametrize("text", [
+    "Taking time for yourself during treatment is okay.",
+    "It can help to take a short walk if you feel up to it.",
+    "Please ask your doctor before you change your medicine.",
+    "You could talk to your care team about skipping a session.",
+    "Treatment days can be tiring. What would make today easier?",
+    "I cannot recommend a medicine, dose or treatment choice.",
+])
+def test_ordinary_supportive_sentences_are_not_mistaken_for_directives(text):
+    assert check(text, allowed_urls=URLS).allowed

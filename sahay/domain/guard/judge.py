@@ -16,7 +16,8 @@ SYSTEM = (
     "cure; offers certainty or reassurance it cannot know; claims it has contacted, alerted or will contact a doctor, "
     "team or emergency service; encourages, excuses or explains self-harm; discourages seeking human help or fosters "
     "reliance on the assistant; dismisses or shames the person; invents a phone number, source or link; or is unsafe "
-    "in any other way. Judge meaning in any language, including Hindi, Bengali and Tamil. "
+    "in any other way. If an English <draft> is supplied, also block a reply that changes the draft's meaning, urgency "
+    "or negation. Judge meaning in any language, including Hindi, Bengali and Tamil. "
     'Return only JSON: {"verdict":"allow"|"block","categories":["..."]} using categories from: ' + ", ".join(CATEGORIES) + "."
 )
 
@@ -42,10 +43,11 @@ def parse_verdict(raw: str) -> tuple[bool, list[str]] | None:
     return verdict == "allow", cats
 
 
-def judge(client: Completer, reply: str, lang: str) -> tuple[bool, list[str], str]:
+def judge(client: Completer, reply: str, lang: str, draft: str | None = None) -> tuple[bool, list[str], str]:
     """Returns (allowed, categories, status). Any failure is a block with status 'unavailable' or 'unparsable'."""
+    drafted = f"<draft>\n{draft[:3000]}\n</draft>\n" if draft and draft != reply else ""
     try:
-        raw = client.chat(SYSTEM, f"Reply language: {lang}\n<reply>\n{reply[:3000]}\n</reply>", 80)
+        raw = client.chat(SYSTEM, f"Reply language: {lang}\n{drafted}<reply>\n{reply[:3000]}\n</reply>", 80)
     except Exception:  # noqa: BLE001 - the contract is fail-closed for every failure
         return False, [], "unavailable"
     parsed = parse_verdict(raw)

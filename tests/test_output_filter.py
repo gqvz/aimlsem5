@@ -1,7 +1,11 @@
 """S2: unsafe claims must be blocked in every reply language, not only English."""
 import pytest
 
-from engine import _passes_output_check
+from sahay.domain.guard import check
+
+
+def _passes_output_check(text, action, card, lang='en'):
+    return check(text, lang=lang, action=action).allowed
 
 UNSAFE = [
     ("en", "You should increase your dose tonight."),

@@ -56,7 +56,7 @@ class CatalogueParityTests(unittest.TestCase):
         import pathlib
         import re
 
-        from agents import ACTIVITIES
+        from sahay.domain.content import ACTIVITIES
         src = (pathlib.Path(__file__).parent.parent / 'android/app/src/main/java/org/sahay/app/WellbeingUi.kt').read_text()
         listed = set(re.findall(r'ActivityEntry\("(\w+)"', src))
         routed = set(re.findall(r'^\s+"(\w+)" -> \w+Activity\(', src, re.MULTILINE))

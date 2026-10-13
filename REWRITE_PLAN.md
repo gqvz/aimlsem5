@@ -61,8 +61,10 @@ and demo fallbacks.
 | 1 Dangerous fixes | done: S1, S2, X1-X4 |
 | 2 Safety module | done: `sahay/domain/safety` (normalisation, typo repair, wider multilingual rules), S3 closed on the corpus |
 | 2b Output guard | done: `sahay/domain/guard`, see below |
-| 3 API layer | in progress |
-| 4-6 | not started |
+| 3 API layer | done: FastAPI + SQLAlchemy + Alembic behind the same URLs; legacy handlers removed; OpenAPI snapshot in `contract/openapi.json` |
+| 4 Pipeline | done: `sahay/domain/pipeline.py`; ordinary turn is 3 model calls (was up to 6), one shared deadline, guard + review merged into one judge call |
+| 5 Android non-UI layers | not started (see note) |
+| 6 Content as data | not started |
 
 ### Output guard (added after plan review)
 

@@ -13,6 +13,9 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 
+from sahay.domain.safety import matches
+
+from .claims import FORBIDDEN_OUTPUT, has_medication_directive
 from .judge import Completer, judge
 from .similarity import SimilarityGuard
 
@@ -36,8 +39,22 @@ class GuardVerdict:
     judge: str = "skipped"    # skipped | judged | unavailable | unparsable
 
 
-def check_deterministic(text: str, *, allowed_urls: set[str], extra_numbers: set[str] = frozenset()) -> str | None:
+MAX_LENGTH = 1800
+
+
+def check_deterministic(text: str, *, allowed_urls: set[str], extra_numbers: set[str] = frozenset(),
+                        lang: str = "en", action: str = "reflect", require_card_url: bool = False) -> str | None:
     """Return a reason string when the text breaks a hard rule, else None."""
+    if not text.strip() or len(text) > MAX_LENGTH:
+        return "length"
+    if matches(text, FORBIDDEN_OUTPUT["en"]) or matches(text, FORBIDDEN_OUTPUT.get(lang, [])):
+        return "forbidden_claim"
+    if has_medication_directive(text):
+        return "medication_directive"
+    if text.count("?") > (2 if action == "questions" else 1):
+        return "too_many_questions"
+    if require_card_url and allowed_urls and not any(u in text for u in allowed_urls):
+        return "missing_source"
     approved = APPROVED_NUMBERS | set(extra_numbers)
     for found in _NUMBER.findall(text):
         digits = re.sub(r"\D", "", found)
@@ -51,21 +68,22 @@ def check_deterministic(text: str, *, allowed_urls: set[str], extra_numbers: set
     return None
 
 
-def check(text: str, *, lang: str = "en", allowed_urls: set[str] | None = None,
+def check(text: str, *, lang: str = "en", action: str = "reflect", allowed_urls: set[str] | None = None,
           judge_client: Completer | None = None, extra_numbers: set[str] = frozenset(),
-          require_judge: bool = False) -> GuardVerdict:
+          require_judge: bool = False, require_card_url: bool = False, draft: str | None = None) -> GuardVerdict:
     """Evaluate one model-written string.
 
     `require_judge=True` blocks when no judge can run; use it when a model produced the text.
     """
-    reason = check_deterministic(text, allowed_urls=allowed_urls or set(), extra_numbers=extra_numbers)
+    reason = check_deterministic(text, allowed_urls=allowed_urls or set(), extra_numbers=extra_numbers,
+                                 lang=lang, action=action, require_card_url=require_card_url)
     if reason:
         return GuardVerdict(False, "deterministic", [reason])
     hits = _similarity.scan(text)
     if hits:
         return GuardVerdict(False, "similarity", sorted({h.category for h in hits}))
     if judge_client is not None and getattr(judge_client, "ready", False):
-        allowed, categories, status = judge(judge_client, text, lang)
+        allowed, categories, status = judge(judge_client, text, lang, draft)
         if not allowed:
             return GuardVerdict(False, "judge" if status == "judged" else f"judge_{status}", categories, status)
         return GuardVerdict(True, judge="judged")

@@ -137,7 +137,7 @@ class ModelHttpTests(unittest.TestCase):
         result = self.post('/api/message', {'text': 'I feel worried', 'model_config': config})
         self.assertEqual(result['mode'], 'live')
         self.assertEqual([x['agent'] for x in result['agent_trace']], ['Language','Safety','Supervisor','Emotional support','Guard','Review'])
-        self.assertEqual(len(LocalProvider.calls), 5)
+        self.assertEqual(len(LocalProvider.calls), 3)  # understand+route, draft, judge
         self.assertTrue(all(model == 'device-model' for _, model, _ in LocalProvider.calls))
         self.assertTrue(all(key == 'Bearer secret' for _, _, key in LocalProvider.calls))
         self.post('/api/model/test', {})

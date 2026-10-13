@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import os
 
-from engine import ModelClient
+from sahay.providers.llm import ModelClient
 
 
 def judge_client(default: ModelClient) -> tuple[ModelClient, str]:
