@@ -7,6 +7,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 import json
 from typing import Any
+from sahay.domain.safety import assess
 from engine import (ModelClient, ModelError, LANGS, FALLBACK, SOURCES, _json_object,
     _matches, MEDICAL_REQUEST_PATTERNS, DEPENDENCY_PATTERNS, rule_risk,
     more_cautious, choose_action, choose_card, _fallback_response, _passes_output_check)
@@ -69,15 +70,16 @@ class LanguageAgent:
 
 class SafetyAgent:
     def run(self, s):
-        s.risk = more_cautious(rule_risk(s.original), rule_risk(s.english), s.risk)
+        original, english = assess(s.original), assess(s.english)
+        s.risk = more_cautious(original.risk, english.risk, s.risk)
         s.step('Safety', 'risk_gate', s.risk)
         if s.risk in ('crisis','urgent_medical'):
             s.action = 'help'
             return FALLBACK[s.lang]['crisis' if s.risk == 'crisis' else 'medical']
-        if _matches(s.original+' '+s.english, MEDICAL_REQUEST_PATTERNS):
+        if original.medical_request or english.medical_request:
             s.action = 'medical_boundary'; return FALLBACK[s.lang]['medical_boundary']
         if s.risk == 'concerning':
-            if _matches(s.original+' '+s.english, DEPENDENCY_PATTERNS):
+            if original.dependency or english.dependency:
                 s.action='human_connection'; return FALLBACK[s.lang]['connection']
             s.action='clarify'; return FALLBACK[s.lang]['uncertain']
         return None

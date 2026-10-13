@@ -15,9 +15,11 @@ from dataclasses import dataclass, field
 from urllib.parse import urlsplit
 from typing import Any
 
+from sahay.domain.safety import (CRISIS_PATTERNS, DEPENDENCY_PATTERNS, MEDICAL_PATTERNS,  # noqa: F401
+                                 MEDICAL_REQUEST_PATTERNS, RISK_ORDER, assess, more_cautious, matches as _matches)
+
 
 LANGS = {"en": "English", "hi": "Hindi", "bn": "Bengali", "ta": "Tamil"}
-RISK_ORDER = {"ordinary": 0, "concerning": 1, "urgent_medical": 2, "crisis": 3}
 
 SOURCES = {
     "feelings": {
@@ -62,33 +64,6 @@ SOURCE_SUMMARIES = {
     },
 }
 
-CRISIS_PATTERNS = [
-    r"\b(kill myself|suicid(?:e|al)|end my life|hurt(?:ing)? myself|harm(?:ing)? myself|self[- ]?harm|want to die|don't want to live|do not want to live|don't want to wake up|do not want to wake up)\b",
-    r"\b(marna chaht[ai]|marna hai|jaan den[ai]|jeena nahi|khud ko maar|apni jaan len[ai])\b",
-    r"आत्महत्या|मरना चाहत|जान देन|जीना नहीं|खुद को मार",
-    r"আত্মহত্যা|মরতে চাই|বাঁচতে চাই না|নিজেকে মেরে",
-    r"தற்கொலை|சாக விரும்ப|வாழ விரும்பவில்லை|உயிரை மாய்த்த",
-]
-MEDICAL_PATTERNS = [
-    r"\b(fever|high temperature|can't breathe|cannot breathe|short(?:ness)? of breath|chest pain|heavy bleeding|uncontrolled bleeding)\b",
-    r"\b(bukhar|bukhaar|saans nahi|saans phool|khoon beh|tez dard)\b",
-    r"बुखार|तेज़ बुखार|सांस नहीं|साँस नहीं|सांस फूल|सांस लेने में दिक्कत|साँस लेने में दिक्कत|श्वास लेने में दिक्कत|खून बह",
-    r"জ্বর|শ্বাসকষ্ট|শ্বাস নিতে পারছি না|রক্তপাত",
-    r"காய்ச்சல்|மூச்சுத் திணறல்|மூச்சு விட முடியவில்லை|ரத்தப்போக்கு",
-]
-DEPENDENCY_PATTERNS = [
-    r"\b(only you|just you|no one else|you're all i have|you are all i have)\b",
-    r"सिर्फ तुम|केवल तुम|बस तुम|তুমি ছাড়া কেউ নেই|உன்னைத் தவிர யாரும் இல்லை",
-]
-MEDICAL_REQUEST_PATTERNS = [
-    r"\b(dose|dosage|\d+\s*mg|how much (?:medicine|medication)|double (?:my|the) (?:medicine|medication)|what is my (?:diagnosis|prognosis))\b",
-    r"\b(?:should|can) i (?:take|stop|start|change|double|increase|decrease|skip)\b",
-    r"\b(?:stop|start|change|increase|decrease) (?:taking |my |the )?(?:medicine|medication|chemo|treatment)\b",
-    r"\b(?:which|what) (?:medicine|medication|treatment) (?:should|can) i\b",
-    r"\bwill (?:chemo|treatment|this medicine|this medication) (?:cure|work)\b",
-    r"\b(?:kitna mg|dawai ki khurak|dava ki khurak)\b",
-    r"दवा की खुराक|कितनी खुराक|ওষুধের মাত্রা|எவ்வளவு மருந்து",
-]
 
 FALLBACK = {
     "en": {
@@ -150,26 +125,12 @@ FALLBACK = {
 }
 
 
-def _matches(text: str, patterns: list[str]) -> bool:
-    return any(re.search(pattern, text, re.IGNORECASE) for pattern in patterns)
-
-
 def rule_risk(text: str) -> str:
-    if _matches(text, CRISIS_PATTERNS):
-        return "crisis"
-    if _matches(text, MEDICAL_PATTERNS):
-        return "urgent_medical"
-    if _matches(text, DEPENDENCY_PATTERNS):
-        return "concerning"
-    return "ordinary"
-
-
-def more_cautious(*risks: str) -> str:
-    return max((r for r in risks if r in RISK_ORDER), key=lambda r: RISK_ORDER[r], default="concerning")
+    return assess(text).risk
 
 
 def choose_action(text: str, requested: str | None) -> str:
-    if _matches(text, MEDICAL_REQUEST_PATTERNS):
+    if assess(text).medical_request:
         return "medical_boundary"
     if requested in {"reflect", "coping", "info", "questions"}:
         return requested

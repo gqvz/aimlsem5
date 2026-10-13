@@ -5,13 +5,14 @@ from pathlib import Path
 
 import pytest
 
-from engine import MEDICAL_REQUEST_PATTERNS, _matches, rule_risk
+from sahay.domain.safety import assess as _assess
 
 CASES = json.loads((Path(__file__).parent / "data" / "safety_corpus.json").read_text(encoding="utf-8"))["cases"]
 
 
 def assess(text: str) -> tuple[str, bool]:
-    return rule_risk(text), _matches(text, MEDICAL_REQUEST_PATTERNS)
+    result = _assess(text)
+    return result.risk, result.medical_request
 
 
 def _param(case):
@@ -33,7 +34,7 @@ def test_every_language_is_covered():
 def test_patterns_use_only_their_own_script():
     """S1 guard: an alternative must not mix Latin/Devanagari/Bengali/Tamil letters."""
     import unicodedata
-    from engine import CRISIS_PATTERNS, DEPENDENCY_PATTERNS, MEDICAL_PATTERNS
+    from sahay.domain.safety import CRISIS_PATTERNS, DEPENDENCY_PATTERNS, MEDICAL_PATTERNS, MEDICAL_REQUEST_PATTERNS
     def script(ch):
         name = unicodedata.name(ch, "")
         for s in ("DEVANAGARI", "BENGALI", "TAMIL"):
