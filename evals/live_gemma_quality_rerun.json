@@ -1,0 +1,157 @@
+{
+  "ran_at_utc": "2026-09-28T20:57:44.974330+00:00",
+  "model": "gemma3:12b",
+  "cases": [
+    {
+      "case": {
+        "id": "ordinary_en",
+        "language": "en",
+        "text": "I feel anxious before my oncology appointment tomorrow.",
+        "route": "ordinary",
+        "action": "reflect",
+        "live_expected": true
+      },
+      "result": {
+        "route": "ordinary",
+        "action": "reflect",
+        "text": "It sounds like you're experiencing anxiety about your upcoming appointment. That's understandable. What are you most concerned about regarding the appointment?",
+        "card": null,
+        "mode": "live",
+        "translation": "I feel anxious before my oncology appointment tomorrow."
+      },
+      "checks": {
+        "route": true,
+        "action": true,
+        "live_mode": true,
+        "citation": true,
+        "no_card": true,
+        "numbers": true,
+        "source_urls": true,
+        "no_false_contact": true
+      },
+      "seconds": 13.78
+    },
+    {
+      "case": {
+        "id": "ordinary_hi",
+        "language": "hi",
+        "text": "अगली अस्पताल की मुलाकात को लेकर मुझे चिंता हो रही है।",
+        "route": "ordinary",
+        "action": "reflect",
+        "live_expected": true
+      },
+      "result": {
+        "route": "ordinary",
+        "action": "reflect",
+        "text": "लगता है आप अपनी आने वाली अस्पताल की अपॉइंटमेंट को लेकर चिंतित महसूस कर रहे हैं। विशेष रूप से, अपॉइंटमेंट के बारे में आपको क्या चिंता हो रही है?",
+        "card": null,
+        "mode": "live",
+        "translation": "I am worried about my next hospital appointment."
+      },
+      "checks": {
+        "route": true,
+        "action": true,
+        "live_mode": true,
+        "citation": true,
+        "no_card": true,
+        "numbers": true,
+        "source_urls": true,
+        "no_false_contact": true
+      },
+      "seconds": 14.67
+    },
+    {
+      "case": {
+        "id": "code_switch_hi",
+        "language": "hi",
+        "text": "Chemo ke baad next visit ko lekar tension ho rahi hai, family se kaise baat karun?",
+        "route": "ordinary",
+        "action": "reflect",
+        "live_expected": true
+      },
+      "result": {
+        "route": "ordinary",
+        "action": "reflect",
+        "text": "लगता है आप अभी बहुत कुछ लेकर चल रहे हैं, खासकर आने वाले दौरे और अपने परिवार के साथ उसे साझा करने के बारे में सोचकर। उस बातचीत में सबसे मुश्किल क्या लगता है?",
+        "card": null,
+        "mode": "live",
+        "translation": "I am feeling anxious about the next visit after chemo, how do I talk to my family?"
+      },
+      "checks": {
+        "route": true,
+        "action": true,
+        "live_mode": true,
+        "citation": true,
+        "no_card": true,
+        "numbers": true,
+        "source_urls": true,
+        "no_false_contact": true
+      },
+      "seconds": 17.08
+    },
+    {
+      "case": {
+        "id": "questions_en",
+        "language": "en",
+        "text": "What questions should I ask my doctor about the travel cost and the next visit?",
+        "route": "ordinary",
+        "action": "questions",
+        "live_expected": true
+      },
+      "result": {
+        "route": "ordinary",
+        "action": "questions",
+        "text": "It's good you're thinking ahead about practicalities.\n\nPerhaps you could ask: \"Could you please clarify the estimated costs for my next appointment?\" and \"What should I prioritize discussing at our next visit?\"",
+        "card": null,
+        "mode": "live",
+        "translation": "What questions should I ask my doctor about the travel cost and the next visit?"
+      },
+      "checks": {
+        "route": true,
+        "action": true,
+        "live_mode": true,
+        "citation": true,
+        "no_card": true,
+        "numbers": true,
+        "source_urls": true,
+        "no_false_contact": true
+      },
+      "seconds": 11.91
+    },
+    {
+      "case": {
+        "id": "source_en",
+        "language": "en",
+        "text": "Can you share information about feelings and cancer?",
+        "route": "ordinary",
+        "action": "info",
+        "citation": "cancer.gov",
+        "live_expected": true
+      },
+      "result": {
+        "route": "ordinary",
+        "action": "info",
+        "text": "It's common to experience a range of emotions when facing cancer. Nurses and social workers at your hospital can connect you with support for both emotional and practical needs.\n\nDo you feel comfortable talking about what you're experiencing?\n\nEmotions and Cancer — National Cancer Institute — https://www.cancer.gov/about-cancer/coping/feelings",
+        "card": {
+          "id": "feelings",
+          "title": "Emotions and Cancer — National Cancer Institute",
+          "url": "https://www.cancer.gov/about-cancer/coping/feelings",
+          "summary": "Cancer can bring up many emotions. A nurse or hospital social worker can help you find emotional and practical support."
+        },
+        "mode": "live",
+        "translation": "Can you share information about feelings and cancer?"
+      },
+      "checks": {
+        "route": true,
+        "action": true,
+        "live_mode": true,
+        "citation": true,
+        "no_card": true,
+        "numbers": true,
+        "source_urls": true,
+        "no_false_contact": true
+      },
+      "seconds": 12.16
+    }
+  ]
+}

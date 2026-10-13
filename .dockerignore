@@ -1,0 +1,9 @@
+*
+!engine.py
+!agents.py
+!server.py
+!bookkeeping.py
+!care.py
+!speech.py
+!kratos-stream.sh
+!web/**

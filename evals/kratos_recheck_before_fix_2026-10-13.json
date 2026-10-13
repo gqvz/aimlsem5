@@ -1,0 +1,114 @@
+[
+  {
+    "case": "chat_en",
+    "seconds": 66.78,
+    "result": {
+      "route": "concerning",
+      "action": "clarify",
+      "text": "I may have missed part of what you meant. Could you say a little more or correct the transcript? If this is urgent, use the Help button now.",
+      "card": null,
+      "mode": "fixed",
+      "translation": "I feel worried about my hospital appointment tomorrow.",
+      "agent_trace": [
+        {
+          "agent": "Language",
+          "tool": "original_text",
+          "outcome": "provider_unavailable",
+          "mode": "fallback"
+        },
+        {
+          "agent": "Safety",
+          "tool": "risk_gate",
+          "outcome": "concerning",
+          "mode": "fixed"
+        }
+      ],
+      "orchestration": "sahay-agent-graph-v1",
+      "provider_error": "The model could not be reached or returned an invalid reply. Check the endpoint and model name."
+    }
+  },
+  {
+    "case": "chat_hi",
+    "seconds": 0.01,
+    "result": {
+      "route": "concerning",
+      "action": "clarify",
+      "text": "शायद मैं आपकी बात पूरी तरह नहीं समझ पाया। कृपया थोड़ा और बताएं या लिखे गए शब्द ठीक करें। अगर मामला ज़रूरी है, अभी मदद बटन दबाएँ।",
+      "card": null,
+      "mode": "fixed",
+      "translation": "अगली अस्पताल की मुलाकात को लेकर मुझे चिंता हो रही है।",
+      "agent_trace": [
+        {
+          "agent": "Language",
+          "tool": "original_text",
+          "outcome": "provider_unavailable",
+          "mode": "fallback"
+        },
+        {
+          "agent": "Safety",
+          "tool": "risk_gate",
+          "outcome": "concerning",
+          "mode": "fixed"
+        }
+      ],
+      "orchestration": "sahay-agent-graph-v1",
+      "provider_error": "The model could not be reached or returned an invalid reply. Check the endpoint and model name."
+    }
+  },
+  {
+    "case": "activity_plan",
+    "seconds": 0.01,
+    "result": {
+      "route": "concerning",
+      "action": "clarify",
+      "text": "I may have missed part of what you meant. Could you say a little more or correct the transcript? If this is urgent, use the Help button now.",
+      "card": null,
+      "mode": "fixed",
+      "translation": "I feel tired and want a gentle distraction.",
+      "agent_trace": [
+        {
+          "agent": "Language",
+          "tool": "original_text",
+          "outcome": "provider_unavailable",
+          "mode": "fallback"
+        },
+        {
+          "agent": "Safety",
+          "tool": "risk_gate",
+          "outcome": "concerning",
+          "mode": "fixed"
+        }
+      ],
+      "orchestration": "sahay-agent-graph-v1",
+      "provider_error": "The model could not be reached or returned an invalid reply. Check the endpoint and model name."
+    }
+  },
+  {
+    "case": "visit_brief",
+    "seconds": 0.01,
+    "result": {
+      "route": "concerning",
+      "action": "clarify",
+      "text": "I may have missed part of what you meant. Could you say a little more or correct the transcript? If this is urgent, use the Help button now.",
+      "card": null,
+      "mode": "fixed",
+      "translation": "Help me draft questions about travel costs and asking my family for support at appointments.",
+      "agent_trace": [
+        {
+          "agent": "Language",
+          "tool": "original_text",
+          "outcome": "provider_unavailable",
+          "mode": "fallback"
+        },
+        {
+          "agent": "Safety",
+          "tool": "risk_gate",
+          "outcome": "concerning",
+          "mode": "fixed"
+        }
+      ],
+      "orchestration": "sahay-agent-graph-v1",
+      "provider_error": "The model could not be reached or returned an invalid reply. Check the endpoint and model name."
+    }
+  }
+]

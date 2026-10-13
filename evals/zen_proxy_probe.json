@@ -1,0 +1,14 @@
+{
+  "date": "2026-10-12",
+  "host_endpoint": "http://127.0.0.1:8787/v1/chat/completions",
+  "model": "space-bunny-free",
+  "docker_proxy_reachable": true,
+  "sahay_connection_test": {
+    "ok": false,
+    "model": "space-bunny-free",
+    "error": "Model provider returned HTTP 403. Check provider access or the backend API key."
+  },
+  "proxy_error_type": "free_tier_restricted",
+  "proxy_reports_required_configuration": "ZEN_API_KEY",
+  "successful_generation": false
+}

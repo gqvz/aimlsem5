@@ -1,164 +1,338 @@
-# Agentic AI for emotional wellbeing in people affected by cancer
+# Sahay — updated system architecture
 
-## Project decision
+Updated: **12 October 2026**. This document describes the current implementation. Pending integrations are listed separately in section 9.
 
-Build an **India-first, speech-and-text, adult-only course prototype** for people living with cancer. The first release supports **Hindi, Bengali, and Tamil**, plus English; users may mix English with an Indian language in speech or writing. The assistant helps a user name a concern, choose a small coping action, find trustworthy general information, and prepare to talk to a person on their care team. It has no diagnostic or treatment authority. All evaluation uses fictional cases; the prototype is not presented as a clinical service.
+Sahay is an **Android emotional wellbeing course prototype for adults affected by cancer in India**. It combines a calm native interface, optional recreational activities, multilingual support, a bounded multi-agent assistant, and patient-controlled communication with a fictional care team.
 
-The agentic element is a bounded plan over several steps: understand the user's goal, choose one allowed support action, use a curated source when factual information is needed, check the response, and update only user-approved memory. The route can change as the conversation changes. This is more defensible than a collection of unrestricted agents with clinical-sounding job titles.
+## 1. System overview
 
-## Why change the supplied diagram?
+```mermaid
+flowchart TB
+    subgraph Android["Android app — Kotlin / Jetpack Compose"]
+        Patient["Patient: Today, Talk, Explore, Care, Settings"]
+        Clinician["Clinician: Review, Messages, Settings"]
+        Admin["Admin: accounts, invitations, audit"]
+        Local["Device: activities, language assets, preferences, encrypted session"]
+        Voice["Voice: device recognition/TTS or API mode"]
+    end
+    subgraph Docker["Local Docker deployment"]
+        API["Python HTTP API — server.py"]
+        Graph["Eight-agent task graph — agents.py"]
+        Accounts["Accounts and consent — bookkeeping.py"]
+        Care["Care messages and files — care.py"]
+        Speech["STT/TTS adapters — speech.py"]
+        DB[("SQLite in persistent /data volume")]
+        Tunnel["Private SSH model bridge"]
+    end
+    Patient --> API
+    Clinician --> API
+    Admin --> API
+    Patient --- Local
+    Voice -->|"API mode"| API
+    API --> Graph
+    API --> Accounts
+    API --> Care
+    API --> Speech
+    Accounts --> DB
+    Care --> DB
+    Graph --> ModelAPI["Configurable Chat Completions endpoint"]
+    ModelAPI --> Zen["Default: OpenCode / space-bunny-free"]
+    ModelAPI -.->|"Optional Gemma configuration"| Tunnel
+    Tunnel -->|"SSH to zeb@10.25.1.1"| Gemma["Remote Docker: Ollama / gemma3:12b"]
+    Speech -.->|"When providers are configured"| Providers["External transcription and speech APIs"]
+```
 
-The supplied architecture has a useful core: distinct support tasks, retained context, and escalation. The changes below address its main implementation and evaluation gaps.
+| Layer | Current implementation |
+| --- | --- |
+| Main client | Native Kotlin, Jetpack Compose, Material components; Android only |
+| Client state | `SahayViewModel`, Compose observable state, bundled content and Android preferences |
+| Backend | Python standard-library `ThreadingHTTPServer`; JSON HTTP API |
+| Agent orchestration | Custom request-scoped graph with eight specialist agents; no LangGraph dependency |
+| Model | Shared selected model through an OpenAI-compatible endpoint; default `space-bunny-free`, optional `gemma3:12b` |
+| Backend storage | SQLite: accounts, sessions, invitations, approved shares, care conversations/files, audit |
+| Deployment | Backend container with hosted model endpoint; optional SSH bridge for remote Gemma |
+| Languages | English, Hindi, Bengali and Tamil (`en`, `hi`, `bn`, `ta`) |
 
-| Supplied component | Decision for this prototype | Reason |
+The earlier web prototype remains served by the backend. The current product UI and activities are in the Android app.
+
+## 2. Android application architecture
+
+### Screens and role routing
+
+- **Guest/patient:** interactive garden arrival → Today; bottom destinations are Today, Talk, Explore, Care and Settings. Today starts with one optional breathing invitation, followed by an expandable mood/energy check-in and activity plan.
+- **Clinician:** sign-in/session restoration → review queue; separate Review, Messages and Settings destinations. Detail screens display patient-selected briefs and questions, with manual review status and notes.
+- **Admin:** account list, clinician invitations, deactivation and audit metadata. Admin accounts have no care-message/file access through the care API.
+- **Settings:** full screen for identity, display name, password, sign-out, language, larger text, reduced motion, volume, speech provider, local saving, clearing local data, support, connection settings and the latest agent handoffs.
+
+Saved sessions are checked through `/api/me` before restoring the matching role home. Invalid sessions return to account entry; connection failures show retry/sign-out controls. Back and Help return to their originating screen.
+
+### Client layers
+
+| Responsibility | Source |
+| --- | --- |
+| Permissions, speech, document picker, file opening/export | `MainActivity.kt` |
+| Navigation, observable state, HTTP requests, sessions, client fallback | `SahayViewModel.kt` |
+| Patient shell, chat and core screens | `SahayUi.kt` |
+| Arrival, Today, Explore and activities | `WellbeingUi.kt`, `WellbeingCopy.kt`, `AmbientAudio.kt` |
+| Accounts, clinician/admin, care and settings | `AccountUi.kt`, `CareUi.kt`, `SettingsUi.kt` |
+| Shared spacing, app bars, page frames and bottom actions | `UiPrimitives.kt` |
+| Bundled multilingual copy, sources and fixed replies | `Content.kt`, `assets/content.json`, `assets/i18n.json` |
+| Session encryption | `SessionStore.kt` |
+
+Activity controls and the care composer use persistent bottom action areas above the keyboard and system insets. Scrollable content is separate. Shared controls use 48dp icon targets, 56dp primary actions and consistent spacing. See [UI_REFINEMENT.md](UI_REFINEMENT.md) for design decisions and rendered checks.
+
+### Local activities
+
+Nine activities run on the device without requiring the LLM:
+
+1. Gentle breathing, with start/pause and optional stopping.
+2. Five-senses grounding with step-by-step progression.
+3. Guided quiet/meditation moment.
+4. Locally generated rain, white noise and brown noise.
+5. Garden matching pairs.
+6. Colour hunt.
+7. Drawing canvas with undo and PNG export.
+8. Private journal with optional local saving.
+9. Explicitly fictional encouragement notes.
+
+The Activity agent recommends catalogue entries; it does not generate executable games or exercise instructions. Timers/audio respect leaving the activity and backgrounding. There are no wellbeing streaks or performance scores.
+
+## 3. Multi-agent backend
+
+### Agent responsibilities and authority
+
+Eight agents share the selected model and a request-scoped state. Each has separate instructions and code-controlled operations. Safety is deterministic; the other agents combine model calls with fixed validation or fallback behavior.
+
+| Agent | Responsibility | Available operations |
 | --- | --- | --- |
-| Text, voice, vitals ingestion | Typed input and push-to-talk voice in Hindi, Bengali, Tamil, and English; no vitals | Make speech useful for Indian-language access while keeping transcript review and explicit safety checks. Do not infer emotion or clinical state from voice tone. |
-| Central graph state with patient memory and clinical context | Explicit session state plus small, editable preference memory | Avoid implying access to reliable medical records or building an opaque psychological profile. |
-| Supervisor and three broad agents | Deterministic safety gate followed by one constrained planner and a small set of actions | Fewer model calls, clearer control flow, measurable routing decisions. |
-| Clinical summarizer | **Patient-owned question list / visit summary** | No clinician documentation claim without a clinician workflow. |
-| Continuous affective/symptom monitor | Optional self-report check-in within the session | No passive monitoring or inference of clinical change. |
-| Semi-autonomous therapeutic intervention | Short, opt-in coping exercises from fixed, reviewed templates | Avoid claiming to deliver therapy. The model may adapt wording, not the core instruction. |
-| Safety guardrail after agents | Input safety gate **before** planning, plus output check before display | Unsafe content must not wait for an agent to recognize it. |
-| Clinician dashboard and EHR | Synthetic demo review queue only if time permits; no EHR | A dashboard without a staffed recipient must never be described as actual escalation. |
-| General psycho-oncology RAG | Small, versioned, cited knowledge cards from authoritative sources | Research papers and free-form retrieval are unsuitable as direct patient instructions. |
-| English-only reasoning or output | Translation layer with source-language safety checks and translated answers | A translated English paraphrase can lose negation, urgency, or culturally specific expressions of distress. |
+| Language | English working translation, initial model risk classification, reply translation | Translate/classify input; translate output |
+| Safety | Combine original-text rules, translated-text rules and model risk; stop unsafe routes | Risk gate; fixed help, clarification, medical-boundary or human-connection reply |
+| Supervisor | Select a permitted specialist action | Delegate to `reflect`, `coping`, `info`, `questions`, `activities` or `brief` |
+| Emotional support | Acknowledge a concern and ask a relevant question | Draft a short reflective reply |
+| Knowledge | Explain an available curated source summary | Lookup one of four cards; draft a cited explanation |
+| Activity | Select an optional plan suited to stated energy | Choose 1–3 catalogue IDs, checked by code |
+| Visit preparation | Prepare care-visit questions or a first-person brief | Produce an editable draft from supplied context |
+| Review | Check generated output for fidelity and allowed content | Approve or veto; fixed fallback on veto/failure |
 
-## Proposed architecture
+Operations are Python methods controlled by the graph. The model cannot execute arbitrary tools, read the database, send care messages/files, change accounts or contact a clinician. A turn executes a bounded sequence of handoffs, without an autonomous background loop.
+
+### Turn execution
 
 ```mermaid
 flowchart TD
-    U[India-first UI<br/>language choice, typed text or push-to-talk,<br/>AI disclosure, Help button] --> I[Input adapter<br/>ASR, transcript preview and correction,<br/>language and script tags]
-    I --> TIN[AI translation to working language<br/>retain original text and uncertain spans]
-    TIN --> API[API / session controller]
-    API --> G1[Input safety gate on original AND translation<br/>rules + model classifier + uncertainty fallback]
-    G1 -->|urgent self-harm or medical concern| E[Fixed immediate-help response<br/>care team / emergency / crisis resources]
-    G1 -->|uncertain or concerning| C[Cautious support + encourage human contact]
-    G1 -->|ordinary support| P[Constrained planner<br/>choose one allowed action]
-    P --> R[Reflective conversation]
-    P --> X[Opt-in grounding or mindfulness card]
-    P --> Q[General-information answer]
-    P --> V[Question list for next care visit]
-    Q --> K[Curated, versioned knowledge cards]
-    R --> G2[Clinical and relational output check]
-    X --> G2
-    K --> G2
-    V --> G2
-    C --> G2
-    G2 -->|pass| TOUT[Translate to chosen language<br/>check meaning, numbers, negation, resource names]
-    G2 -->|fail| F[Safe fallback response] --> TOUT
-    TOUT --> O[Always show text and citations;<br/>TTS playback when audio is enabled] --> U
-    E --> LOCAL[Reviewed fixed help text<br/>for selected language] --> O
-    API <--> S[(Session state and optional<br/>user-approved preference memory)]
-    G1 --> L[(Minimal evaluation log)]
-    P --> L
-    G2 --> L
+    Input["Text or patient-corrected transcript"] --> Pre["Local risk check before model calls"]
+    Pre -->|"Explicit urgent input"| Fixed["Fixed localized help reply"]
+    Pre -->|"Otherwise"| Lang["Language: translate and classify"]
+    Lang --> Safety["Safety: combine risks and apply boundaries"]
+    Safety -->|"Crisis or urgent medical"| Fixed
+    Safety -->|"Concerning or treatment request"| Boundary["Fixed clarification, connection or medical-boundary reply"]
+    Safety -->|"Ordinary"| Sup["Supervisor: choose action"]
+    Sup --> Reflect["Emotional support"]
+    Sup --> Info["Knowledge: curated source"]
+    Sup --> Visit["Visit preparation: questions or brief"]
+    Sup --> Plan["Activity: catalogue plan"]
+    Sup --> Coping["Fixed grounding script"]
+    Reflect --> Translate["Language: translate reply if needed"]
+    Info --> Translate
+    Visit --> Translate
+    Translate --> Review["Review model + deterministic output checks"]
+    Review -->|"Approved"| Response["Reply, source, suggestions and public trace"]
+    Review -->|"Veto or failure"| Fallback["Fixed localized fallback"]
+    Plan --> Validate["Validate IDs, uniqueness, energy and constraints"]
+    Validate --> Response
+    Coping --> Response
+    Fixed --> Response
+    Boundary --> Response
+    Fallback --> Response
 ```
 
-The **Help** button is available on every screen and bypasses speech recognition, translation, and the model. The translation adapter passes both the original text and its working translation to the controller; on translation failure it passes the original with an `uncertain` flag. The input gate runs on every turn, including after earlier low-risk turns. It reads the source-language transcript **and** the English working translation when available; either can trigger the more cautious route. The output check catches unsupported clinical statements, missing source links in factual answers, false claims that a person has been alerted, excessive intimacy, and instruction to ignore medical advice. The translated response then gets a second check for changed meaning, negation, numbers, and emergency instructions. A failed check gets one safe fallback, not an unbounded retry loop. If any provider is unavailable, the UI still shows the Help button and a typed-input fallback.
+The graph does **not** call all eight agents on every turn:
 
-### Language and speech pipeline
+- Reflection: Language → Safety → Supervisor → Emotional support → output translation if needed → Review.
+- Activity plan: Language → Safety → Supervisor → Activity → catalogue validation. Its introduction uses fixed localized copy; this path skips the generative Review step.
+- Brief: Language → Safety → Supervisor → Visit preparation → output translation if needed → Review → patient editing. Sharing is a separate authenticated action.
+- Explicit urgent wording recognized by local rules: immediate fixed Safety response, skipping model calls.
 
-1. At onboarding, the user selects **Hindi, Bengali, Tamil, or English** and can change it at any time. Provide native-script labels and a clear English label; do not infer language from a name, location, or accent. Hinglish and other code-switched messages can be entered under either relevant language setting.
-2. Typed text goes directly to the input adapter. Voice uses **push-to-talk**, then speech-to-text (ASR). Show the recognized transcript in the user's selected script with borrowed words visible, allow editing, and require the user to send it. No continuous microphone or emotion detection from vocal features. When ASR is uncertain, ask for correction or typing; if it has detected possible urgency, show the Help panel immediately while awaiting confirmation.
-3. Keep the original text, any corrected transcript, language tags, and the translated working text together for that turn. AI translation may help the planner, but the safety gate checks both versions. Preserve quoted words, medicine names, time, negation, and statements about self-harm or immediate symptoms. A disagreement routes cautiously and is logged for review.
-4. Generate the content in a controlled working language, then translate to the selected language. Keep source links and emergency numbers outside free-form translation. Check the final translated text before display. Show text and citations even when audio is enabled; TTS reads only the checked text in voice mode. The user can pause, replay, slow, or turn off audio.
-5. Prewrite short help and urgent-response messages in all supported languages and have **bilingual student reviewers** check them before the demo. These messages must work without generative translation or TTS. Never make a live AI translation the sole carrier of a crisis instruction.
+### State, context and response contract
 
-AI4Bharat is one possible source of Indian-language ASR, machine translation, and TTS models; a hosted provider is also acceptable. Put these behind three replaceable adapters (`transcribe`, `translate`, `speak`) and check actual quality and latency on your test set before choosing one. This architecture does not require three separate LLMs or a new vector database.
+The actual `State` holds request data, model client, original text, language, English translation, risk, action, provider issue flag, public trace and task-specific extras. It exists only for the request.
 
-### India-first interaction design
+Android normally supplies the last four displayed messages as recent conversation context. Visit preparation also includes the patient's concerns/questions. There is no backend longitudinal patient-memory store or inferred emotional profile.
 
-- Offer plain-language examples involving travel to a treatment centre, cost, family conversations, work, and uncertainty after diagnosis. Ask which concern applies instead of assuming a particular family structure, religion, income, or cancer type.
-- Match the user's chosen language and informal or formal register. Test native scripts, Latin-script Hindi, code switching, accents, and borrowed medical words such as “chemo.” Do not translate an English-speaking user's answer into a formal language they did not choose.
-- Keep a visible **private mode**: no spoken playback by default, headphones reminder when audio is enabled, and a quick way to clear the screen/session. A user may be sharing a phone or be near family members.
-- Design for common phone use: large tap targets and text, short audio clips, low-bandwidth loading states, and no required account for the demo. Keep typing, captions, and the Help panel usable when microphone permission or connectivity fails.
-- The Help panel shows India-relevant resources with readable local-language labels. It can include **112** for immediate emergencies, **Tele-MANAS 14416** for mental-health support, and a user-entered oncology-team number. It must never suggest that the app has called anyone.
+`POST /api/message` returns:
 
-### Allowed actions and boundaries
+```json
+{
+  "route": "ordinary",
+  "action": "reflect",
+  "text": "...",
+  "card": null,
+  "mode": "live",
+  "translation": "English working text",
+  "agent_trace": [{"agent": "Supervisor", "tool": "delegate", "outcome": "reflect", "mode": "llm"}],
+  "orchestration": "sahay-agent-graph-v1"
+}
+```
 
-1. **Reflect:** acknowledge the expressed feeling, ask one open question, and avoid reassurance about prognosis or treatment.
-2. **Offer a coping card:** invite the user to choose a brief grounding, breathing, or reflection exercise. Skip body-focused exercises if they feel uncomfortable; always offer a stop option. The exercise steps come from fixed cards; personalization is limited to the user's chosen topic and tone.
-3. **Answer a general question:** retrieve from a curated NCI/WHO or locally approved card, cite the exact source and date, say when information is general, and suggest the oncology team for personal decisions. No medication, dosage, prognosis, diagnosis, or treatment-plan advice.
-4. **Prepare human contact:** turn the user's concerns into questions they can ask their oncology team, counselor, trusted person, or support service. The user edits and exports the list; the app does not send it.
-5. **Escalate visibly:** for self-harm language, immediate danger, or concerning medical symptoms, interrupt the normal agent workflow. Give brief, concrete next steps and locally relevant resources. Do not claim a clinician was notified. Medical concerns go to the oncology team or urgent care as appropriate; mental-health crisis concerns go to emergency or crisis support. Ambiguous cases receive a cautious response and are included in evaluation, not silently treated as low risk.
+Task-specific fields include `activity_plan`, `visit_brief` and launchable `suggestions`. The trace exposes tool decisions rather than hidden reasoning; Android shows the latest chat/plan trace under AI activity.
 
-The resource panel and escalation path use the same verified India contacts. The team number is user-entered and is never invented by the model. General information cards may come from an international medical source, but the answer should distinguish general guidance from the user's own treatment plan and use India-relevant examples where available.
+`mode` distinguishes model-approved output (`live`), fixed routing (`fixed`), deterministic demo behavior (`demo`) and failure/veto fallback (`fallback`). Activity plans can be `live` when the model selects valid IDs, even though their introductory text is fixed.
 
-### Session and data model
+Knowledge uses four bundled source cards, without a vector database or open-web RAG. Unknown topics return fixed unavailable-information text. Rule checks and model review do not guarantee correct interpretation of novel input.
 
-Use a compact typed state rather than putting the whole transcript in every prompt:
+## 4. Indian languages and speech
+
+### Language flow
+
+The selected language is saved in device preferences and changed in Settings. Core UI/help/account controls, activity labels and principal exercise guidance are bundled in English, Hindi, Bengali and Tamil. Secondary explanations and clinician/admin interfaces remain English-first.
+
+For a live ordinary turn, the selected model creates an English working translation, a specialist drafts the answer, and Language translates it to the selected language. Safety checks both original and translated input. Review compares the final answer against the draft, including urgency and negation. AI translation uses the shared model; there is no separate external translator service.
+
+Mixed-language input is accepted as text, but code switching, accents and translation accuracy still need broader bilingual evaluation. The implementation does not retain word-level language spans, ASR confidence or a clinical distress score.
+
+### Speech flow
 
 ```text
-session_id, input_mode, selected_language, detected_language_spans,
-asr_transcript, corrected_original_text, working_translation,
-translation_uncertainty, current_message, last_few_turns,
-user_goal, chosen_action, risk_route, risk_reason,
-retrieved_card_ids, working_response, translated_response,
-output_check, translation_check, audio_enabled,
-approved_preferences {language, script, preferred_name, coping_preferences},
-consent_to_save_preferences
+Microphone
+  ├─ Device mode → Android recognition service
+  └─ API mode → AAC/M4A clip → backend STT adapter → configured provider
+       ↓
+Editable transcript → explicit Send → agent graph → readable reply
+       ↓
+Optional playback → Android TTS or backend TTS adapter → MP3
 ```
 
-For the course demo, use fictional personas and synthetic transcripts/recordings. Do not upload actual patient records or build an EHR connector. Keep recorded audio only long enough to transcribe it for the current turn, then delete it; do not store voiceprints. Store preferences only with an explicit opt-in; give an obvious edit/delete control. Store minimal event logs for evaluation (case ID, language, input mode, route, source IDs, check result, latency), with no raw distress disclosures by default. Avoid analytics that reward long conversations or daily engagement.
+- Device recognition/TTS depend on installed Android services and available language voices.
+- API mode is wired, but real STT/TTS providers have not been supplied.
+- Transcription accepts up to 8 MB of audio and forwards an OpenAI-compatible multipart request with model, language and file.
+- Synthesis forwards text/model/voice and returns MP3. It relies on the provider understanding the input script; a provider requiring an explicit language parameter needs an adapter adjustment.
+- API recording clips are deleted after completion/cancellation. Transcripts are shown for correction before sending. Denied permissions and missing providers retain text input/readable replies.
+- Provider URLs/credentials stay on the backend. Device speech may use its installed service's network processing; it is not guaranteed to be offline.
 
-## Safety route specification
+## 5. Clinician handoff and two-way care communication
 
-| Input | Route | Required visible behavior |
-| --- | --- | --- |
-| Ordinary worry, loneliness, uncertainty | Support | Brief empathetic response; user chooses reflect, coping, information, or visit questions. |
-| “You are the only one I can talk to” or repeated reassurance seeking | Human-connection prompt | Acknowledge and help identify a trusted person or support service; no exclusive or affectionate claims. |
-| Medication, side effect, diagnosis, prognosis, or treatment choice | General information or referral | No personalized clinical advice; use cited general information when available and direct specific decisions to the oncology team. |
-| Possible acute physical issue, including fever during cancer treatment | Medical urgent | Prompt contact with the oncology team promptly or urgent/emergency services according to the situation; no home-management prescription. |
-| Self-harm intent, plan, or immediate danger, including indirect Hindi, Bengali, Tamil, or Hinglish phrasing | Crisis | Short supportive message in the selected language, immediate human-help action, India-specific resources, no ordinary conversation plan. |
-| ASR, translation, or risk classifier uncertain | Cautious | Ask for transcript correction or one clarifying question if safe while showing human-help options; never label uncertainty as “safe.” |
+### Patient-approved visit brief
 
-The gate can combine a small transparent multilingual ruleset with one model-based structured classification (`ordinary`, `concerning`, `urgent_medical`, `crisis`, `uncertain`), using the more cautious result on disagreement between original and translated text. This is a product rule for the prototype, not a validated clinical triage algorithm. Record disagreements for error analysis. Keep the multilingual crisis reply templates separate from the general model prompt.
+1. Patient writes concerns/questions or requests an AI draft.
+2. Patient edits the draft, selects questions, chooses a clinician and explicitly confirms consent.
+3. Backend stores a snapshot in `shares` and records an audit event.
+4. The selected clinician sees it in the review queue and can mark `in_review` or `reviewed`, with a note.
+5. Patient can revoke the share. Subsequent clinician API reads are blocked and it leaves the queue.
 
-## Two-week build plan
+Only selected brief/questions/note are shared. Ordinary chat and journal content are not automatically copied into this workflow. Revocation blocks future app access; it cannot erase information already viewed or copied by a recipient.
 
-| Time | Deliverable | Exit check |
-| --- | --- | --- |
-| Days 1-2 | Scope, multilingual fictional personas, safety policy, 12-20 curated cards, reviewed help strings, and test cases in all four languages | Everyone agrees on permitted actions; bilingual reviewers check urgent messages. |
-| Days 3-5 | Language selector, typed chat, session API, safety gate on original/translation, fixed help resources | Crisis and medical routes work without generation or translation. |
-| Days 6-8 | Planner and four actions; cited retrieval; response translation and output checks | End-to-end text cases work in Hindi, Bengali, Tamil, and English. |
-| Days 9-10 | Push-to-talk ASR, transcript correction, TTS, privacy controls | Spoken and code-switched cases work in all three Indian languages; text remains usable when speech fails. |
-| Days 11-12 | Run multilingual text and audio evaluations; repair failures; freeze prompts/cards/providers | Complete result table by language and input mode. |
-| Days 13-14 | Demo script, architecture explanation, limitations and results slides | A teammate can reproduce the demo and evaluation. |
+### Care messages, files and requests
 
-Suggested implementation: React/Next.js or a simple React frontend with browser microphone permission and audio playback; Python FastAPI backend; a LangGraph **state graph** if the team wants to show explicit agent transitions, otherwise plain Python functions are enough; one LLM API behind a model adapter; replaceable ASR/translation/TTS adapters; SQLite for optional session/preference state; a tiny versioned JSON knowledge-card store with simple search. Skip a vector database until retrieval quality justifies it. Pin model, prompt, speech/translation provider, and source-card versions for reproducible tests. The acceptance gate requires push-to-talk input, checked text output, and spoken playback in **all three Indian languages**; typed input and readable text remain available when speech services fail.
+Care communication is independent of visit-brief sharing:
 
-## Evaluation: what to measure
+- One thread joins one patient and one clinician. Either can open it from the synthetic opposite-role directory.
+- Both can send notes/files without waiting for a request.
+- Clinicians create `file_request` messages. Patients attach a reply using `request_id`; storing the reply and fulfilling the request occur in the same database transaction.
+- Accepted formats: PDF, PNG, JPEG and UTF-8 text; up to two attachments per API message, each at most 5 MB. Android currently holds one pending attachment.
+- Files are SQLite BLOBs, downloaded through authenticated participant checks and opened/exported through Android file APIs.
+- Authorization checks session, role, thread membership and active partner status. Sending/downloading produces audit events.
 
-Use a fixed, fictional test set before prompt tuning, then add a held-out set. Cover **Hindi, Bengali, Tamil, English, and code-switched speech/text**. Include multi-turn escalation, indirect self-harm wording, fever after treatment, requests for medication advice, “only you understand me,” fabricated-source traps, prompt injection inside retrieved text, ordinary worries, and requests for visit questions. Add short synthetic voice clips with different speakers, accents, noise levels, and borrowed English medical terms. Keep the expected route and forbidden behaviors in a CSV/JSON file, and review outputs manually as well as automatically.
+Files are **not** automatically interpreted by the LLM. Care uses manual fetch/refresh, without push notifications or emergency monitoring. Brief revocation does not revoke independently sent care files; there is no unsend. The course directory is not a verified hospital patient-assignment system.
 
-| Measure | How to report it |
+## 6. Accounts, storage and access
+
+### Bookkeeping
+
+Patients can register; clinicians accept admin-created invitations or use seeded fictional accounts. Invitations are returned to the admin for manual sharing, without automatic email delivery. Admins are provisioned through demo seeding. Sessions expire after 12 hours. Password changes invalidate all account sessions; deactivation also invalidates sessions.
+
+Passwords use salted `scrypt`; bearer tokens and invitation codes are hashed in SQLite. Android stores its session bundle with AES-GCM using Android Keystore and checks the server session on launch. Backend handlers enforce role authorization independently of navigation.
+
+### Persistence
+
+| Data | Location and retention |
 | --- | --- |
-| Route accuracy | Confusion matrix by expected vs observed route; list every missed urgent case. |
-| Critical safety | Count misses for self-harm/medical-urgent cases; target **zero misses in the authored suite**, with no claim of real-world sensitivity. |
-| Boundary adherence | Count personalized medical advice, invented clinician contact, dependence-promoting claims, and unsupported reassurance. |
-| Grounding | For factual answers, check whether each material claim is supported by the retrieved card and whether the user can open its source. |
-| Translation fidelity | Bilingual reviewers check meaning, negation, symptom timing, numbers, local register, and whether the translated answer preserves its cited source. |
-| Speech quality | Measure transcript error on the synthetic clips and count whether clinically important words were dropped; separately test TTS intelligibility and pause/replay controls. |
-| Usability | Student raters assess clarity, warmth, length, language match, privacy, and usefulness of next step on a defined rubric. |
-| System behavior | End-to-end voice latency, provider failure paths, text fallback, memory edit/delete, and Help button behavior. |
+| User profile/role/active status | SQLite `users` |
+| Hashed sessions and expiring invitations | SQLite `sessions`, `invitations` |
+| Shared brief, review status/note and revocation | SQLite `shares`; submission/status events in `audit` |
+| Care messages, request status, attachments | SQLite `care_threads`, `care_messages`, `care_files` |
+| Account/share/care event metadata | SQLite `audit`; admin API returns latest 100 entries |
+| Ordinary AI chat, visit questions, journal | Device memory by default; opt-in device preferences for local saving |
+| Language, accessibility, audio, connection preferences | Android preferences |
+| Unsent care draft and pending attachment | ViewModel memory; retained for the same thread during the session, cleared on thread change/sign-out/local clear |
+| Agent state/trace | Request memory and latest client state; no durable backend trace store |
 
-Compare against a **single-prompt chatbot baseline** on the same cases. Show 3-5 representative traces and an error table, including cases the proposed architecture still mishandles. Report results **per language and per input mode** so English success does not hide Indian-language failures. This supports a course claim about routing, multilingual usability, and safety behavior, not a claim that the app improves patient wellbeing or replaces psycho-oncology care.
+Only the session bundle is encrypted by `SessionStore`; opt-in saved conversation/question/journal preferences are not separately encrypted by the app. Sign-out/local clear remove local sensitive content, without deleting previously submitted backend shares or care messages.
 
-## Evidence used
+Message and speech endpoints support guest use and currently do not require account tokens. Account, share, clinician/admin and care operations require authorization. The server does not durably store ordinary AI transcripts; configured model/speech providers process supplied text/audio under their own behavior.
 
-- Supplied [clinical data escalation architecture](resources/Clinical%20Data%20Escalation-2026-09-17-121504.pdf): useful starting diagram, but safety and actual human review need to be specified precisely.
-- Supplied [MindfulAgents paper](resources/DOC-20260811-WA0010-1.pdf): expert-aligned templates, reflection, and personalization motivate the fixed-card-plus-adaptive-wording design. Its short studies do not establish efficacy in cancer patients.
-- Supplied [agentic psychiatry perspective](resources/s41746-026-02453-4-1.pdf): bounded autonomy and staged evaluation motivate the narrow prototype; its proposed clinical workflows require real oversight and validation.
-- Supplied [oncology chatbot review](resources/ejmo_6251-1.pdf): identifies potential support uses and privacy/accuracy/human-intervention challenges. It is a qualitative review and conceptual framework, not validation of this app.
-- Supplied [IGAP India report](resources/IGAP-The-Conversation-No-One-Planned-For-compressed-1.pdf): motivates explicit AI identity, India-specific crisis resources, dependence controls, privacy, and Hinglish multi-turn tests. Its platform study used constructed personas; it does not measure this prototype.
-- [AI4Bharat language technology](https://ai4bharat.iitm.ac.in/): Indian-language speech recognition, translation, and speech generation are plausible components; model choice still needs quality testing for this use case.
-- [NCI: Adjustment to Cancer, Anxiety and Distress](https://www.cancer.gov/about-cancer/coping/feelings/anxiety-distress-hp-pdq): distress screens require follow-up discussion and appropriate referral resources.
-- [NCI: Infection and Neutropenia during Cancer Treatment](https://www.cancer.gov/about-cancer/treatment/side-effects/infection): possible infection symptoms warrant contact with the care team.
-- [WHO: Responsible AI for Mental Health and Well-Being](https://www.who.int/news/item/20-03-2026-towards-responsible-ai-for-mental-health-and-well-being--experts-chart-a-way-forward): safety, accountability, cultural context, and monitoring of dependence.
-- [India Emergency Response Support System](https://112.gov.in/) and [Tele-MANAS](https://dghs.mohfw.gov.in/national-mental-health-programme.php): official India resource numbers.
+## 7. API boundaries
 
-## What a successful course demo can claim
+| Area | Routes |
+| --- | --- |
+| Assistant/content | `POST /api/message`, `POST /api/model/test`, `GET /api/cards`, `GET /api/health` |
+| Authentication | `POST /api/auth/{register,login,accept-invite,logout}` |
+| Account | `GET /api/me`; `POST /api/me/profile`, `/api/me/password` |
+| Patient sharing | `GET /api/clinicians`; `POST /api/shares`; `GET /api/shares/mine`; `DELETE /api/shares/{id}` |
+| Clinician review | `GET /api/clinician/queue`, `/api/clinician/shares/{id}`; `POST /api/clinician/shares/{id}/review` |
+| Care | `GET /api/care/contacts`; `GET/POST /api/care/threads`; `GET/POST /api/care/threads/{id}/messages`; `GET /api/care/files/{id}` |
+| Administration | `POST /api/admin/invitations`; `GET /api/admin/users`, `/api/admin/audit`; `POST /api/admin/users/{id}/deactivate` |
+| Speech | `GET /api/speech/status`; `POST /api/speech/transcribe`, `/api/speech/synthesize` |
 
-“Our India-first prototype accepted typed and spoken input in Hindi, Bengali, Tamil, and English. A constrained agent workflow chose among emotional support, a coping card, cited general information, and visit preparation. It routed selected fictional high-risk cases to fixed help paths, and we measured these decisions, speech recognition, and translation quality against a documented test set.”
+Android **Settings → AI model** saves a per-device endpoint URL and model name. `model_config: {url, model}` selects that client for the whole graph without changing the backend default or another device. **Save and test model** calls `/api/model/test` for a real short request. Credentials remain on the backend, are attached only to its exact configured endpoint, and are not forwarded on redirects. The current requested OpenCode free-tier endpoint returns HTTP 403 outside OpenCode; live access is pending provider authorization.
 
-It cannot claim clinical effectiveness, validated risk detection, continuous monitoring, clinician oversight, or real patient safety from a two-week student evaluation.
+`/api/health` exposes the credential-free default URL/name and reports whether they are configured; its `live` flag does not prove current model connectivity. Speech status likewise reports configuration presence.
+
+## 8. Deployment and failure handling
+
+### Course deployment
+
+- **Backend:** `Dockerfile`, Python 3.12, nonroot UID 10001, health check, 384 MB memory cap, 1 CPU; persistent `sahay-data` volume at `/data`.
+- **Host access:** `127.0.0.1:8000`; emulator reaches it at `10.0.2.2:8000`.
+- **Model:** optional `compose.gemma.yaml` runs a 64 MB SSH bridge, forwarding private Docker-network traffic to the authorized host's loopback Ollama service. The recorded demo uses existing remote container `resume-ollama` and `gemma3:12b`.
+- **SSH:** bridge mounts the current SSH agent socket and trusted `known_hosts`, without copying a private key. A restarted agent needs its socket configuration refreshed. No model port is published to the host/LAN by the bridge.
+- **Configuration:** `LLM_API_URL`, `LLM_MODEL`, optional `LLM_API_KEY`, `LLM_TIMEOUT`; speech uses `STT_*` and `TTS_*` variables. Secrets belong in ignored `.env`, not source or Android assets. The current default is `https://opencode.ai/zen/v1/chat/completions` / `space-bunny-free`; the optional Gemma Compose file explicitly overrides it.
+
+```bash
+# Backend without the optional model bridge:
+docker compose up -d --build
+
+# Model-enabled setup, from a terminal with the SSH key loaded:
+export SAHAY_SSH_AGENT="$SSH_AUTH_SOCK"
+docker compose -f compose.yaml -f compose.gemma.yaml up -d --build
+```
+
+Unset live-model settings to select deterministic demo behavior. Remote inference keeps large model-memory requirements off the development PC. Build Android with the emulator closed after the earlier OOM; see [android/README.md](android/README.md) for the constrained modern-phone emulator setup.
+
+### Failure behavior
+
+- Explicit urgent input recognized by local rules gets a fixed reply before slow model calls.
+- Missing model configuration uses deterministic backend replies. Invalid output, provider failure or review veto selects a fixed fallback.
+- Backend disconnection leaves local activities available and uses bundled client chat fallbacks; care/account submissions require a successful server response.
+- Missing speech configuration returns 503 with readable text retained.
+- Model timeouts are per call; several sequential calls can exceed the Android chat timeout. A whole-turn deadline/cancellation mechanism is not implemented.
+- This deployment uses local HTTP. Hosted TLS and production operations are outside the current course setup.
+
+## 9. Implemented versus pending
+
+| Implemented | Pending or outside current scope |
+| --- | --- |
+| Native patient/clinician/admin flows, full Settings, role restoration | Real identity verification, hospital assignments, EHR integration |
+| Eight-agent delegation, public handoffs, fixed safety routes, output review | Clinical efficacy validation and broader independent safety evaluation |
+| Four-language text support and AI translation | Bilingual review of all copy, wider code-switching/accent tests |
+| Device speech hooks and HTTP STT/TTS adapters | Real speech API credentials, voice quality and microphone/device validation |
+| Nine local activities and constrained AI recommendations | Live peer community/moderation; current notes are fictional |
+| Two-way files, clinician requests, approved briefs and audit | Malware scanning, unsend, push messaging, automatic file interpretation |
+| Persistent Docker backend and private model bridge | Production hosting, automated backups, rate limits, whole-turn cancellation |
+
+## 10. Recorded validation
+
+These are existing implementation records, not tests rerun for this documentation update:
+
+- [OVERHAUL_VALIDATION.md](OVERHAUL_VALIDATION.md): 31 Python tests; Docker account/file/request flows and persistence; **22/22 authored fictional Gemma cases** passing the recorded checks. The model artifact is [evals/overhaul_gemma_results.json](evals/overhaul_gemma_results.json), recorded 4 October 2026 UTC / 5 October IST. Earlier routing failures and focused rechecks remain in `evals/`.
+- [UI_REFINEMENT.md](UI_REFINEMENT.md): successful APK build, installed emulator checks, role/session restoration, keyboard/composer behavior, local activities and compact Tamil navigation with larger text.
+- Speech provider tests use mocks; these results do not establish actual recognition/playback quality or clinical performance.
+
+### Relationship to the supplied architecture
+
+The original diagram's supervisor, specialist support, safety, context and clinician-review ideas remain. They are implemented as a bounded request graph, short client-supplied context and explicit patient-approved submissions. Passive clinical monitoring, vitals ingestion, autonomous treatment, an EHR and a vector retrieval service are not implemented.
+
+Original project resources remain in [resources/](resources/): the supplied clinical escalation diagram, MindfulAgents material, agentic psychiatry perspective, oncology chatbot review and India IGAP report. They informed the earlier architecture review; this update is grounded in the current source and recorded validation.
+
+### Model selection update - 12 October 2026
+
+The Android model fields apply to conversations, translation, plans and briefs. Provider errors are returned separately from fallback content and shown in Settings/the app. Direct OpenCode testing returned HTTP 403 (standalone free-tier access restricted); successful Space Bunny responses have not been validated. Earlier Gemma results above remain historical evidence for that model. The exported architecture PDF is the 5 October snapshot.

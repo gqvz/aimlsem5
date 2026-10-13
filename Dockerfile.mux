@@ -1,0 +1,6 @@
+FROM alpine:3.22
+RUN apk add --no-cache openssh-client socat
+COPY kratos-stream.sh /usr/local/bin/kratos-stream
+RUN chmod 755 /usr/local/bin/kratos-stream
+# Each connection uses the existing master; no keys or public model port.
+CMD ["socat", "TCP-LISTEN:11434,reuseaddr,fork", "EXEC:/usr/local/bin/kratos-stream"]

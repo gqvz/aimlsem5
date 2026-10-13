@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_stack" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100vw;margin:0;padding:0;}body{overscroll-behavior:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { colors: { "surface-container-highest": "#dae5e3", "on-primary-container": "#91c5c2", "inverse-on-surface": "#e8f3f1", "on-secondary-fixed-variant": "#793019", "surface-variant": "#dae5e3", "primary-container": "#1d5351", "on-primary-fixed": "#00201f", "on-background": "#131d1c", "on-secondary": "#ffffff", "error-container": "#ffdad6", "surface-tint": "#336764", "on-tertiary-fixed": "#00201f", "tertiary": "#183a38", "surface-container-lowest": "#ffffff", "primary-fixed-dim": "#9cd0cd", "surface-container-low": "#ebf6f4", "primary-fixed": "#b7ede9", "inverse-primary": "#9cd0cd", "outline": "#707978", "secondary-fixed-dim": "#ffb59f", "tertiary-fixed-dim": "#aacdcb", "inverse-surface": "#283231", "secondary-fixed": "#ffdbd0", "surface-bright": "#f1fcfa", "background": "#f1fcfa", "on-surface": "#131d1c", "surface-dim": "#d1dcda", "on-secondary-fixed": "#3a0a00", "tertiary-fixed": "#c6eae7", "tertiary-container": "#30514f", "on-tertiary-fixed-variant": "#2c4c4b", "surface-container-high": "#dfeae8", "primary": "#003c3a", "on-tertiary-container": "#9fc2c0", "on-error": "#ffffff", "outline-variant": "#bfc8c7", "secondary-container": "#fe997a", "surface": "#f1fcfa", "on-primary": "#ffffff", "on-error-container": "#93000a", "on-surface-variant": "#404848", "on-secondary-container": "#772f18", "on-tertiary": "#ffffff", "secondary": "#97472e", "error": "#ba1a1a", "on-primary-fixed-variant": "#174f4d", "surface-container": "#e5f0ee" }, borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, spacing: { "space-md": "1rem", "gutter-desktop": "2rem", "margin": "1rem", "space-xl": "2.5rem", "space-lg": "1.5rem", "gutter": "1rem", "space-xs": "0.375rem", "gutter-tablet": "1.5rem", "margin-desktop": "3rem", "space-sm": "0.625rem", "margin-tablet": "2rem" }, fontFamily: { "headline-lg": ["Noto Sans"], "headline-sm": ["Noto Sans"], "body-md": ["Noto Sans"], "body-xl": ["Noto Sans"], "body-sm": ["Noto Sans"], "label-md": ["Noto Sans"], "label-lg": ["Noto Sans"], "display-lg": ["Noto Sans"], "label-sm": ["Noto Sans"], "body-lg": ["Noto Sans"], "headline-md": ["Noto Sans"] }, fontSize: { "headline-lg": ["26px", { lineHeight: "36px", letterSpacing: "-0.01em", fontWeight: "600" }], "headline-sm": ["19px", { lineHeight: "28px", fontWeight: "600" }], "body-md": ["15px", { lineHeight: "24px", fontWeight: "400" }], "body-xl": ["20px", { lineHeight: "32px", fontWeight: "400" }], "body-sm": ["14px", { lineHeight: "20px", fontWeight: "400" }], "label-md": ["14px", { lineHeight: "20px", fontWeight: "500" }], "label-lg": ["16px", { lineHeight: "24px", fontWeight: "600" }], "display-lg": ["34px", { lineHeight: "44px", letterSpacing: "-0.01em", fontWeight: "600" }], "label-sm": ["12px", { lineHeight: "16px", letterSpacing: "0.04em", fontWeight: "600" }], "body-lg": ["17px", { lineHeight: "28px", fontWeight: "400" }], "headline-md": ["22px", { lineHeight: "32px", fontWeight: "600" }] } } } };</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface text-on-surface font-body-md text-body-md flex flex-col min-h-screen antialiased selection:bg-primary-fixed selection:text-on-primary-fixed"><header class="fixed top-0 inset-x-0 z-50 bg-surface/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] pt-safe"><div class="h-16 px-margin flex items-center justify-between gap-space-xs"><div class="flex items-center gap-space-xs min-w-0"><button aria-label="Navigate Back" class="w-11 h-11 -ml-2 rounded-lg flex items-center justify-center text-on-surface hover:bg-surface-container transition-colors shrink-0" onclick="history.back()"><span class="material-symbols-outlined text-[24px]">arrow_back</span></button><img alt="Brand logo. - Primary color: #1d5351 - Font: notoSans - Mode: light - Roundness: rounded-md" class="h-7 w-auto object-contain shrink-0" src="https://lh3.googleusercontent.com/aida/AEtjO1UZ0z6ToNK_7ggDAO3aDW4Suk9c3N_0B4iAcdu0eipK5lb_uqdGKpozFtsTjqNs1yVqfYG-j2ULPFsjVNw04dPsKFpUgZ5nEQaCPfNRxgYFFrIYhG9HQnOGkd1Bm863wDmTU-jHOeLSe47FY3b4GqyJEiI8EvkE3I0Q9mZgTeszOUZb12Z1rHgBg2yyU1_MTYHIPimGNEdgy8EJqfWkRa7M1C1rPguXMRRBJ_pYtP8xsGB5YyoKh9lI-ns"/><h1 class="font-headline-sm text-headline-sm text-on-surface truncate font-semibold">Zero Llm Emergency Desk</h1></div><div class="flex items-center gap-space-xs shrink-0"><button aria-label="Zero-LLM SOS Emergency Assistance" class="h-10 px-space-sm rounded-lg bg-secondary-fixed text-on-secondary-fixed hover:bg-secondary-fixed-dim transition-colors flex items-center gap-1 font-label-md text-label-md font-semibold"><span class="material-symbols-outlined text-[18px] text-secondary">emergency</span><span class="text-[12px]">मदद</span></button><button aria-label="Quick Conceal Privacy Mask" class="w-10 h-10 rounded-lg flex items-center justify-center text-on-surface-variant hover:bg-surface-container transition-colors"><span class="material-symbols-outlined text-[20px]">visibility_off</span></button><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex flex-col relative w-full pt-16 pb-safe bg-surface max-w-[430px] mx-auto min-h-screen"><div class="flex flex-col w-full px-margin pb-space-xl space-y-space-md">
+<!-- Interactive State Selector Bar (Simulating Android Preview / Compose State Harness) -->
+<div class="bg-surface-container-low rounded-xl p-space-sm shadow-sm">
+<div class="flex items-center justify-between mb-space-xs">
+<span class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-primary">developer_mode</span>
+        Compose State Simulator
+      </span>
+<span class="font-label-sm text-label-sm bg-surface-container-highest text-on-surface-variant px-2 py-0.5 rounded-full" id="current-state-pill">
+        Normal State
+      </span>
+</div>
+<div class="grid grid-cols-4 gap-1">
+<button class="state-btn py-2 px-1 text-center rounded-lg font-label-sm text-label-sm bg-primary text-on-primary shadow-xs transition-all" data-state="normal" onclick="setPreviewState('normal')">Normal</button>
+<button class="state-btn py-2 px-1 text-center rounded-lg font-label-sm text-label-sm bg-surface-container-highest text-on-surface transition-all" data-state="loading" onclick="setPreviewState('loading')">Loading</button>
+<button class="state-btn py-2 px-1 text-center rounded-lg font-label-sm text-label-sm bg-surface-container-highest text-on-surface transition-all" data-state="error" onclick="setPreviewState('error')">Error</button>
+<button class="state-btn py-2 px-1 text-center rounded-lg font-label-sm text-label-sm bg-surface-container-highest text-on-surface transition-all" data-state="offline" onclick="setPreviewState('offline')">Offline</button>
+</div>
+</div>
+<!-- State Driven Alerts -->
+<div class="hidden bg-error-container text-on-error-container rounded-xl p-space-sm flex items-start gap-space-sm shadow-sm transition-all duration-300" id="state-banner-error">
+<span class="material-symbols-outlined text-[20px] shrink-0 text-error">report</span>
+<div class="min-w-0">
+<p class="font-label-md text-label-md font-semibold">लॉगिन विफल (Incorrect Credentials)</p>
+<p class="font-body-sm text-body-sm">कृपया मोबाइल नंबर या पासवर्ड की दोबारा जांच करें। यदि आप सहायता चाहते हैं तो सीधे ओटीपी का उपयोग करें।</p>
+</div>
+</div>
+<div class="hidden bg-surface-container-highest text-on-surface rounded-xl p-space-sm flex items-start gap-space-sm shadow-sm transition-all duration-300" id="state-banner-offline">
+<span class="material-symbols-outlined text-[20px] shrink-0 text-secondary">wifi_off</span>
+<div class="min-w-0">
+<p class="font-label-md text-label-md font-semibold text-secondary">ऑफ़लाइन मोड (Local drafts only)</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">नेटवर्क उपलब्ध नहीं है। केवल स्थानीय सुरक्षित ड्राफ्ट ही डिवाइस पर एक्सेस किए जा सकते हैं।</p>
+</div>
+</div>
+<!-- Main Authentic Card with Compose Outlined Surface Feel -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm space-y-space-md">
+<!-- Visual Quiet Header Context -->
+<div class="flex items-center gap-space-sm">
+<div class="w-12 h-12 rounded-xl bg-surface-container flex items-center justify-center text-primary shrink-0">
+<span class="material-symbols-outlined text-[26px]">shield_person</span>
+</div>
+<div class="min-w-0">
+<h2 class="font-headline-sm text-headline-sm text-on-surface">मरीज़ खाता व डेटा</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Patient Account &amp; Encryption Hub</p>
+</div>
+</div>
+<!-- Segmented Tab Switch (Sign In / Register) -->
+<div class="bg-surface-container-high p-1 rounded-xl flex items-center">
+<button class="flex-1 py-2.5 text-center font-label-md text-label-md rounded-lg bg-surface-container-lowest text-primary shadow-xs transition-all flex items-center justify-center gap-1.5" id="tab-signin" onclick="switchAuthTab('signin')">
+<span class="material-symbols-outlined text-[18px]">login</span>
+        Sign In (साइन इन)
+      </button>
+<button class="flex-1 py-2.5 text-center font-label-md text-label-md rounded-lg text-on-surface-variant hover:text-on-surface transition-all flex items-center justify-center gap-1.5" id="tab-register" onclick="switchAuthTab('register')">
+<span class="material-symbols-outlined text-[18px]">person_add</span>
+        Register (पंजीकरण)
+      </button>
+</div>
+<!-- Auth Input Form Stack -->
+<form class="space-y-space-md pt-space-xs" id="auth-form" onsubmit="event.preventDefault(); simulateSubmit();">
+<!-- Field 1: Full Name / Demo ID (Shows on Register or Demo ID fill) -->
+<div class="space-y-1" id="group-fullname">
+<div class="flex items-center justify-between">
+<label class="font-label-md text-label-md text-on-surface" for="inp-fullname">नाम या डेमो आईडी (Full Name / Sahay ID)</label>
+<span class="font-label-sm text-label-sm text-on-surface-variant">वैकल्पिक</span>
+</div>
+<div class="relative flex items-center bg-surface-container-lowest rounded-xl">
+<input class="w-full h-[52px] px-space-md rounded-xl bg-surface-container-low text-on-surface font-body-md text-body-md focus:bg-surface-container-lowest focus:outline-none transition-all placeholder:text-outline" id="inp-fullname" placeholder="उदा. Sahay-P-4082 या आपका नाम" type="text" value="Sahay-P-4082"/>
+<span class="absolute right-3 material-symbols-outlined text-[20px] text-on-surface-variant pointer-events-none">badge</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant px-1">यदि आप परीक्षण कर रहे हैं, तो डेमो कोड का उपयोग करें।</p>
+</div>
+<!-- Field 2: Mobile Number / Email -->
+<div class="space-y-1">
+<label class="font-label-md text-label-md text-on-surface" for="inp-identifier">मोबाइल नंबर या ईमेल (Mobile (+91) / Email)</label>
+<div class="relative flex items-center bg-surface-container-lowest rounded-xl">
+<input class="w-full h-[52px] px-space-md rounded-xl bg-surface-container-low text-on-surface font-body-md text-body-md focus:bg-surface-container-lowest focus:outline-none transition-all placeholder:text-outline" id="inp-identifier" placeholder="+91 XXXXX XXXXX" type="tel" value="+91 98765 43210"/>
+<span class="absolute right-3 material-symbols-outlined text-[20px] text-on-surface-variant pointer-events-none">phone_iphone</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant px-1">सत्यापन हेतु केवल आवश्यक होने पर सुरक्षित एसएमएस भेजा जाएगा।</p>
+</div>
+<!-- Field 3: Password with Compose Trailing Eye Toggle -->
+<div class="space-y-1">
+<div class="flex items-center justify-between">
+<label class="font-label-md text-label-md text-on-surface" for="inp-password">पासवर्ड (PIN या गुप्त कोड)</label>
+<a class="font-label-sm text-label-sm text-secondary hover:underline" href="#" onclick="event.preventDefault();">भूल गए? (Forgot)</a>
+</div>
+<div class="relative flex items-center bg-surface-container-lowest rounded-xl">
+<input class="w-full h-[52px] pl-space-md pr-12 rounded-xl bg-surface-container-low text-on-surface font-body-md text-body-md focus:bg-surface-container-lowest focus:outline-none transition-all placeholder:text-outline" id="inp-password" placeholder="कम से कम 8 अक्षर" type="password" value="sahay2025secure"/>
+<!-- Trailing 52px Touch Eye Toggle -->
+<button aria-label="पासवर्ड देखें या छिपाएं" class="absolute right-0 h-[52px] w-[52px] flex items-center justify-center text-on-surface-variant hover:text-on-surface transition-colors" id="pwd-toggle-btn" onclick="togglePasswordVisibility()" type="button">
+<span class="material-symbols-outlined text-[22px]" id="pwd-icon">visibility</span>
+</button>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant px-1 flex items-center gap-1" id="password-hint">
+<span class="material-symbols-outlined text-[16px] text-primary">check_circle</span>
+          मज़बूत स्थानीय सुरक्षा सक्रिय है।
+        </p>
+</div>
+<!-- Action Button or 48dp Loading Indicator -->
+<div class="pt-space-xs">
+<button class="w-full h-[52px] rounded-xl bg-primary text-on-primary font-label-lg text-label-lg flex items-center justify-center gap-2 hover:bg-primary-container active:scale-[0.99] transition-all shadow-sm" id="btn-submit" type="submit">
+<span class="material-symbols-outlined text-[20px]" id="btn-submit-icon">lock_open</span>
+<span id="btn-submit-text">खाते में प्रवेश करें (Sign In Securely)</span>
+</button>
+<!-- 48dp Jetpack Compose Circular Progress Placeholder (Hidden unless in loading state) -->
+<div class="hidden w-full h-[52px] flex items-center justify-center bg-surface-container rounded-xl" id="compose-loading-box">
+<div class="flex items-center gap-3">
+<svg class="animate-spin h-7 w-7 text-primary" fill="none" viewbox="0 0 24 24">
+<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3"></circle>
+<path class="opacity-75" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" fill="currentColor"></path>
+</svg>
+<span class="font-label-md text-label-md text-on-surface">सुरक्षित सत्र लोड हो रहा है...</span>
+</div>
+</div>
+</div>
+</form>
+</div>
+<!-- Account Privacy & Grounded Data Controls -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm space-y-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary text-[22px]">verified_user</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">डेटा गोपनीयता व नियंत्रण</h3>
+</div>
+<span class="bg-surface-container text-primary font-label-sm text-label-sm px-2.5 py-1 rounded-full flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+        सक्रिय
+      </span>
+</div>
+<!-- Privacy Pillars Grid -->
+<div class="space-y-space-sm">
+<!-- Item 1: AES-256 -->
+<div class="bg-surface-container-low p-space-sm rounded-xl flex items-start gap-space-sm">
+<div class="w-9 h-9 rounded-lg bg-surface-container flex items-center justify-center text-primary shrink-0">
+<span class="material-symbols-outlined text-[20px]">enhanced_encryption</span>
+</div>
+<div class="min-w-0">
+<p class="font-label-md text-label-md text-on-surface">Local Encryption Status: AES-256 on device</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">आपके लक्षण, दवाइयों के नोट्स और संवाद केवल आपके मोबाइल में एन्क्रिप्टेड रूप में सुरक्षित हैं।</p>
+</div>
+</div>
+<!-- Item 2: Transparent Sharing Policy -->
+<div class="bg-surface-container-low p-space-sm rounded-xl flex items-start gap-space-sm">
+<div class="w-9 h-9 rounded-lg bg-surface-container flex items-center justify-center text-primary shrink-0">
+<span class="material-symbols-outlined text-[20px]">share_location</span>
+</div>
+<div class="min-w-0">
+<p class="font-label-md text-label-md text-on-surface">Data Sharing Policy: Explicit Consent</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">No chat text or voice notes are ever sent to doctors unless you explicitly share an OPD brief summary.</p>
+</div>
+</div>
+</div>
+<!-- Destructive Account Actions Stack -->
+<div class="pt-space-xs space-y-space-xs">
+<!-- Sign Out Button -->
+<button class="w-full h-[52px] rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md text-label-md flex items-center justify-center gap-2 transition-colors" onclick="triggerSignOutAction()" type="button">
+<span class="material-symbols-outlined text-[20px] text-on-surface-variant">logout</span>
+<span>सत्र समाप्त करें / Sign Out (लॉग आउट)</span>
+</button>
+<!-- Delete Local Demo History Button -->
+<button class="w-full h-[52px] rounded-xl bg-secondary-fixed text-on-secondary-fixed hover:bg-secondary-fixed-dim font-label-md text-label-md flex items-center justify-center gap-2 transition-colors" onclick="openDeleteConfirmDialog()" type="button">
+<span class="material-symbols-outlined text-[20px] text-secondary">delete_sweep</span>
+<span>स्थानीय इतिहास हटाएं (Delete Local Demo History)</span>
+</button>
+</div>
+</div>
+<!-- Reassuring Patient Micro-Banner (Domestic Quietness) -->
+<div class="bg-surface-container-high rounded-xl p-space-sm flex items-center gap-space-sm">
+<div class="w-8 h-8 rounded-full bg-surface-container-lowest flex items-center justify-center text-primary shrink-0">
+<span class="material-symbols-outlined text-[18px]">lock</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+      सहाय (Sahay) केवल आपके व्यक्तिगत मार्गदर्शन हेतु है। आपके डेटा की गोपनीयता पूर्णतः सुरक्षित है।
+    </p>
+</div>
+<!-- Bottom Standalone Urgent Emergency Banner (State Independent) -->
+<div class="bg-secondary-container text-on-secondary-container rounded-xl p-space-md shadow-sm">
+<div class="flex items-start gap-space-sm">
+<div class="w-10 h-10 rounded-full bg-surface-container-lowest flex items-center justify-center text-secondary shrink-0 shadow-xs">
+<span class="material-symbols-outlined text-[22px]">medical_services</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center gap-1.5">
+<span class="font-label-lg text-label-lg font-semibold">आपातकालीन सहायता (Emergency SOS)</span>
+</div>
+<p class="font-body-sm text-body-sm mt-0.5">
+          यदि आपको 100.4°F से अधिक बुखार, कंपकंपी या असहनीय दर्द है, तो बिना लॉगिन किए तुरंत हेल्पलाइन या ऑन्कोलॉजी टीम से संपर्क करें।
+        </p>
+<div class="mt-space-sm flex flex-wrap gap-space-xs">
+<a class="h-[44px] px-space-md bg-secondary text-on-secondary rounded-lg font-label-md text-label-md flex items-center gap-1.5 shadow-xs" href="tel:112">
+<span class="material-symbols-outlined text-[18px]">call</span>
+            112 डायल करें
+          </a>
+<button class="h-[44px] px-space-md bg-surface-container-lowest text-on-secondary-container rounded-lg font-label-md text-label-md flex items-center gap-1.5 shadow-xs" onclick="triggerQuickDoctorCall()">
+<span class="material-symbols-outlined text-[18px]">contact_phone</span>
+            ऑन-कॉल नर्स
+          </button>
+</div>
+</div>
+</div>
+</div>
+<!-- Modal Confirm Dialog for Local Data Clear (Emulating Jetpack Compose AlertDialog) -->
+<div class="fixed inset-0 z-50 bg-inverse-surface/80 flex items-center justify-center p-space-md hidden backdrop-blur-[2px]" id="delete-confirm-dialog">
+<div class="bg-surface-container-lowest rounded-xl max-w-sm w-full p-space-md shadow-xl space-y-space-md animate-in fade-in zoom-in duration-150">
+<div class="w-12 h-12 rounded-full bg-secondary-fixed flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-[28px]">warning</span>
+</div>
+<div class="space-y-1">
+<h4 class="font-headline-sm text-headline-sm text-on-surface">डेटा पूरी तरह हटाएं?</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+          स्थानीय डिवाइस पर सुरक्षित किए गए लक्षण डायरी, डेमो सत्र और सभी रिकॉर्ड मिटा दिए जाएंगे। यह क्रिया पूर्ववत नहीं की जा सकती।
+        </p>
+</div>
+<div class="flex items-center justify-end gap-space-xs pt-space-xs">
+<button class="h-[48px] px-space-md rounded-lg font-label-md text-label-md text-on-surface hover:bg-surface-container transition-colors" onclick="closeDeleteConfirmDialog()" type="button">
+          रद्द करें (Cancel)
+        </button>
+<button class="h-[48px] px-space-md rounded-lg bg-secondary text-on-secondary font-label-md text-label-md hover:bg-on-secondary-container transition-colors shadow-xs" onclick="executeDeleteDemoData()" type="button">
+          हटाएं (Confirm Wipe)
+        </button>
+</div>
+</div>
+</div>
+<!-- Notification Toast for feedback -->
+<div class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-inverse-surface text-inverse-on-surface px-space-md py-2.5 rounded-full font-body-sm text-body-sm shadow-lg hidden z-50 flex items-center gap-2" id="quick-toast">
+<span class="material-symbols-outlined text-[18px] text-primary-fixed">info</span>
+<span id="quick-toast-msg">सूचना</span>
+</div>
+</div>
+<script>
+  // Simple State Management Simulation for Android Jetpack Compose Preview
+  let currentActiveTab = 'signin';
+
+  function switchAuthTab(tab) {
+    currentActiveTab = tab;
+    const btnSignIn = document.getElementById('tab-signin');
+    const btnRegister = document.getElementById('tab-register');
+    const btnSubmitText = document.getElementById('btn-submit-text');
+    const btnSubmitIcon = document.getElementById('btn-submit-icon');
+    const groupFullName = document.getElementById('group-fullname');
+
+    if (tab === 'signin') {
+      btnSignIn.className = 'flex-1 py-2.5 text-center font-label-md text-label-md rounded-lg bg-surface-container-lowest text-primary shadow-xs transition-all flex items-center justify-center gap-1.5';
+      btnRegister.className = 'flex-1 py-2.5 text-center font-label-md text-label-md rounded-lg text-on-surface-variant hover:text-on-surface transition-all flex items-center justify-center gap-1.5';
+      btnSubmitText.textContent = 'खाते में प्रवेश करें (Sign In Securely)';
+      btnSubmitIcon.textContent = 'lock_open';
+      groupFullName.classList.add('opacity-90');
+    } else {
+      btnRegister.className = 'flex-1 py-2.5 text-center font-label-md text-label-md rounded-lg bg-surface-container-lowest text-primary shadow-xs transition-all flex items-center justify-center gap-1.5';
+      btnSignIn.className = 'flex-1 py-2.5 text-center font-label-md text-label-md rounded-lg text-on-surface-variant hover:text-on-surface transition-all flex items-center justify-center gap-1.5';
+      btnSubmitText.textContent = 'नया खाता बनाएं (Create Account)';
+      btnSubmitIcon.textContent = 'badge';
+      groupFullName.classList.remove('opacity-90');
+    }
+  }
+
+  function togglePasswordVisibility() {
+    const pwdInput = document.getElementById('inp-password');
+    const pwdIcon = document.getElementById('pwd-icon');
+    if (pwdInput.type === 'password') {
+      pwdInput.type = 'text';
+      pwdIcon.textContent = 'visibility_off';
+    } else {
+      pwdInput.type = 'password';
+      pwdIcon.textContent = 'visibility';
+    }
+  }
+
+  function setPreviewState(state) {
+    // Reset buttons
+    const buttons = document.querySelectorAll('.state-btn');
+    buttons.forEach(b => {
+      if (b.getAttribute('data-state') === state) {
+        b.className = 'state-btn py-2 px-1 text-center rounded-lg font-label-sm text-label-sm bg-primary text-on-primary shadow-xs transition-all';
+      } else {
+        b.className = 'state-btn py-2 px-1 text-center rounded-lg font-label-sm text-label-sm bg-surface-container-highest text-on-surface transition-all';
+      }
+    });
+
+    const errorBanner = document.getElementById('state-banner-error');
+    const offlineBanner = document.getElementById('state-banner-offline');
+    const submitBtn = document.getElementById('btn-submit');
+    const loadingBox = document.getElementById('compose-loading-box');
+    const pill = document.getElementById('current-state-pill');
+
+    errorBanner.classList.add('hidden');
+    offlineBanner.classList.add('hidden');
+    submitBtn.classList.remove('hidden');
+    loadingBox.classList.add('hidden');
+
+    if (state === 'normal') {
+      pill.textContent = 'Normal State';
+      pill.className = 'font-label-sm text-label-sm bg-surface-container-highest text-on-surface-variant px-2 py-0.5 rounded-full';
+    } else if (state === 'loading') {
+      pill.textContent = 'Loading State (48dp Circular)';
+      pill.className = 'font-label-sm text-label-sm bg-primary-fixed text-on-primary-fixed px-2 py-0.5 rounded-full';
+      submitBtn.classList.add('hidden');
+      loadingBox.classList.remove('hidden');
+    } else if (state === 'error') {
+      pill.textContent = 'Credentials Error';
+      pill.className = 'font-label-sm text-label-sm bg-error-container text-on-error-container px-2 py-0.5 rounded-full';
+      errorBanner.classList.remove('hidden');
+    } else if (state === 'offline') {
+      pill.textContent = 'Offline Cache Active';
+      pill.className = 'font-label-sm text-label-sm bg-secondary-fixed text-on-secondary-fixed px-2 py-0.5 rounded-full';
+      offlineBanner.classList.remove('hidden');
+    }
+  }
+
+  function simulateSubmit() {
+    setPreviewState('loading');
+    setTimeout(() => {
+      setPreviewState('normal');
+      showToast('खाता सफलतापूर्वक सत्यापित (Session Active)');
+    }, 1200);
+  }
+
+  function triggerSignOutAction() {
+    showToast('सुरक्षित रूप से लॉग आउट किया गया (Signed Out)');
+  }
+
+  function openDeleteConfirmDialog() {
+    document.getElementById('delete-confirm-dialog').classList.remove('hidden');
+  }
+
+  function closeDeleteConfirmDialog() {
+    document.getElementById('delete-confirm-dialog').classList.add('hidden');
+  }
+
+  function executeDeleteDemoData() {
+    closeDeleteConfirmDialog();
+    showToast('स्थानीय डेमो कैश हटा दिया गया (Wiped)');
+  }
+
+  function triggerQuickDoctorCall() {
+    showToast('ऑन-कॉल सहायता से संपर्क किया जा रहा है...');
+  }
+
+  function showToast(text) {
+    const toast = document.getElementById('quick-toast');
+    const toastMsg = document.getElementById('quick-toast-msg');
+    toastMsg.textContent = text;
+    toast.classList.remove('hidden');
+    setTimeout(() => {
+      toast.classList.add('hidden');
+    }, 2800);
+  }
+</script></main></body></html>

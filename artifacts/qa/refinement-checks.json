@@ -1,0 +1,132 @@
+[
+  {
+    "control": "மென்மையான சுவாசம்",
+    "bounds_px": [
+      80,
+      847,
+      640,
+      1133
+    ],
+    "target_dp": [
+      280.0,
+      143.0
+    ]
+  },
+  {
+    "control": "தொடங்கு / தொடர்க",
+    "bounds_px": [
+      40,
+      1320,
+      680,
+      1432
+    ],
+    "target_dp": [
+      320.0,
+      56.0
+    ]
+  },
+  {
+    "control": "Send message / file",
+    "bounds_px": [
+      133,
+      1455,
+      685,
+      1553
+    ],
+    "target_dp": [
+      315.4,
+      56.0
+    ]
+  },
+  {
+    "control": "Send message / file",
+    "bounds_px": [
+      133,
+      951,
+      685,
+      1049
+    ],
+    "target_dp": [
+      315.4,
+      56.0
+    ]
+  },
+  {
+    "control": "Messages",
+    "bounds_px": [
+      244,
+      1434,
+      475,
+      1574
+    ],
+    "target_dp": [
+      132.0,
+      80.0
+    ]
+  },
+  {
+    "control": "Sign out",
+    "bounds_px": [
+      70,
+      830,
+      650,
+      928
+    ],
+    "target_dp": [
+      331.4,
+      56.0
+    ]
+  },
+  {
+    "control": "Next sense",
+    "bounds_px": [
+      35,
+      1357,
+      685,
+      1455
+    ],
+    "target_dp": [
+      371.4,
+      56.0
+    ]
+  },
+  {
+    "control": "Stop sound",
+    "bounds_px": [
+      35,
+      1357,
+      685,
+      1455
+    ],
+    "target_dp": [
+      371.4,
+      56.0
+    ]
+  },
+  {
+    "control": "Keep this reflection",
+    "bounds_px": [
+      35,
+      951,
+      685,
+      1049
+    ],
+    "target_dp": [
+      371.4,
+      56.0
+    ]
+  },
+  {
+    "control": "அமைப்புகள்",
+    "bounds_px": [
+      589,
+      1408,
+      720,
+      1568
+    ],
+    "target_dp": [
+      65.5,
+      80.0
+    ]
+  }
+]

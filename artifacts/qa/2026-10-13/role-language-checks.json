@@ -1,0 +1,20 @@
+[
+  {
+    "flow": "new_body_scan",
+    "hindi_instruction_rendered": true
+  },
+  {
+    "flow": "clinician",
+    "login_queue": true,
+    "cold_start_correct_role": true,
+    "keyboard_focus_to_password": true
+  },
+  {
+    "flow": "clinician",
+    "messages_destination": true
+  },
+  {
+    "flow": "clinician",
+    "sign_out_returns_patient_arrival": true
+  }
+]

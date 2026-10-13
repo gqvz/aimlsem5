@@ -1,0 +1,226 @@
+[
+  {
+    "case": "chat_en",
+    "seconds": 1.93,
+    "result": {
+      "route": "ordinary",
+      "action": "reflect",
+      "text": "It sounds like you're experiencing anxiety related to your upcoming hospital appointment. What thoughts are contributing to your worry?",
+      "card": null,
+      "mode": "live",
+      "translation": "I feel worried about my hospital appointment tomorrow.",
+      "agent_trace": [
+        {
+          "agent": "Language",
+          "tool": "translate_and_classify",
+          "outcome": "ordinary",
+          "mode": "llm"
+        },
+        {
+          "agent": "Safety",
+          "tool": "risk_gate",
+          "outcome": "ordinary",
+          "mode": "fixed"
+        },
+        {
+          "agent": "Supervisor",
+          "tool": "delegate",
+          "outcome": "reflect",
+          "mode": "llm"
+        },
+        {
+          "agent": "Emotional support",
+          "tool": "draft_reply",
+          "outcome": "reflect",
+          "mode": "llm"
+        },
+        {
+          "agent": "Review",
+          "tool": "approve_or_veto",
+          "outcome": "approved",
+          "mode": "llm"
+        }
+      ],
+      "orchestration": "sahay-agent-graph-v1"
+    }
+  },
+  {
+    "case": "chat_hi",
+    "seconds": 2.71,
+    "result": {
+      "route": "ordinary",
+      "action": "reflect",
+      "text": "लगता है कि आप अपनी आने वाली अस्पताल यात्रा से संबंधित चिंता महसूस कर रहे हैं। जब आप इसके बारे में सोचते हैं तो आपके मन में कौन से विचार या भावनाएँ सबसे प्रमुख हैं?",
+      "card": null,
+      "mode": "live",
+      "translation": "I am worried about my next hospital appointment.",
+      "agent_trace": [
+        {
+          "agent": "Language",
+          "tool": "translate_and_classify",
+          "outcome": "ordinary",
+          "mode": "llm"
+        },
+        {
+          "agent": "Safety",
+          "tool": "risk_gate",
+          "outcome": "ordinary",
+          "mode": "fixed"
+        },
+        {
+          "agent": "Supervisor",
+          "tool": "delegate",
+          "outcome": "reflect",
+          "mode": "llm"
+        },
+        {
+          "agent": "Emotional support",
+          "tool": "draft_reply",
+          "outcome": "reflect",
+          "mode": "llm"
+        },
+        {
+          "agent": "Language",
+          "tool": "translate_reply",
+          "outcome": "hi",
+          "mode": "llm"
+        },
+        {
+          "agent": "Review",
+          "tool": "approve_or_veto",
+          "outcome": "approved",
+          "mode": "llm"
+        }
+      ],
+      "orchestration": "sahay-agent-graph-v1"
+    }
+  },
+  {
+    "case": "activity_plan",
+    "seconds": 1.52,
+    "result": {
+      "route": "ordinary",
+      "action": "activities",
+      "text": "Here are a few gentle options for today. Choose one, change the plan, or stop whenever you want.",
+      "card": null,
+      "mode": "live",
+      "translation": "I feel tired and want a gentle distraction.",
+      "agent_trace": [
+        {
+          "agent": "Language",
+          "tool": "translate_and_classify",
+          "outcome": "ordinary",
+          "mode": "llm"
+        },
+        {
+          "agent": "Safety",
+          "tool": "risk_gate",
+          "outcome": "ordinary",
+          "mode": "fixed"
+        },
+        {
+          "agent": "Supervisor",
+          "tool": "delegate",
+          "outcome": "activities",
+          "mode": "llm"
+        },
+        {
+          "agent": "Activity",
+          "tool": "catalogue_plan",
+          "outcome": "grounding,comforts,safeplace",
+          "mode": "llm"
+        }
+      ],
+      "orchestration": "sahay-agent-graph-v1",
+      "activity_plan": [
+        {
+          "id": "grounding",
+          "title": "Notice your surroundings",
+          "minutes": 2,
+          "energy": "low"
+        },
+        {
+          "id": "comforts",
+          "title": "Small comforts",
+          "minutes": 2,
+          "energy": "low"
+        },
+        {
+          "id": "safeplace",
+          "title": "A safe place",
+          "minutes": 3,
+          "energy": "low"
+        }
+      ],
+      "suggestions": [
+        {
+          "screen": "activity",
+          "id": "grounding",
+          "label": "Notice your surroundings"
+        },
+        {
+          "screen": "activity",
+          "id": "comforts",
+          "label": "Small comforts"
+        },
+        {
+          "screen": "activity",
+          "id": "safeplace",
+          "label": "A safe place"
+        }
+      ]
+    }
+  },
+  {
+    "case": "visit_brief",
+    "seconds": 2.81,
+    "result": {
+      "route": "ordinary",
+      "action": "brief",
+      "text": "I'm trying to figure out how to manage the costs of getting to appointments, as travel is proving difficult. I’d like to discuss options for financial assistance with these expenses. Also, I'm considering asking my family for support during these visits, and I want to talk about what that might look like and how to approach them. I'm unsure about the best way to handle these situations and would appreciate some guidance.",
+      "card": null,
+      "mode": "live",
+      "translation": "Help me draft a brief about travel costs and asking my family for support at appointments.",
+      "agent_trace": [
+        {
+          "agent": "Language",
+          "tool": "translate_and_classify",
+          "outcome": "ordinary",
+          "mode": "llm"
+        },
+        {
+          "agent": "Safety",
+          "tool": "risk_gate",
+          "outcome": "ordinary",
+          "mode": "fixed"
+        },
+        {
+          "agent": "Supervisor",
+          "tool": "delegate",
+          "outcome": "brief",
+          "mode": "llm"
+        },
+        {
+          "agent": "Visit preparation",
+          "tool": "editable_draft",
+          "outcome": "brief",
+          "mode": "llm"
+        },
+        {
+          "agent": "Review",
+          "tool": "approve_or_veto",
+          "outcome": "approved",
+          "mode": "llm"
+        }
+      ],
+      "orchestration": "sahay-agent-graph-v1",
+      "visit_brief": "I'm trying to figure out how to manage the costs of getting to appointments, as travel is proving difficult. I’d like to discuss options for financial assistance with these expenses. Also, I'm considering asking my family for support during these visits, and I want to talk about what that might look like and how to approach them. I'm unsure about the best way to handle these situations and would appreciate some guidance.",
+      "suggestions": [
+        {
+          "screen": "share",
+          "label": "Review visit brief"
+        }
+      ]
+    }
+  }
+]

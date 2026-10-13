@@ -1,0 +1,40 @@
+[
+  {
+    "flow": "Gentle stretch",
+    "steps": 5,
+    "completed": true
+  },
+  {
+    "flow": "A slow body scan",
+    "steps": 5,
+    "completed": true
+  },
+  {
+    "flow": "A safe place",
+    "steps": 4,
+    "completed": true
+  },
+  {
+    "flow": "Small comforts",
+    "steps": 3,
+    "completed": true
+  },
+  {
+    "flow": "worry",
+    "released_and_not_saved": true
+  },
+  {
+    "flow": "winddown",
+    "stops_in_background": true
+  },
+  {
+    "flow": "mood",
+    "weekly_view": true
+  },
+  {
+    "flow": "mood",
+    "opt_in_saves_existing": true,
+    "opt_out_removes_saved": true,
+    "cold_start_restores_when_enabled": true
+  }
+]

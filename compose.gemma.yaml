@@ -1,0 +1,16 @@
+# Optional private SSH model bridge. No model port is published to the host/LAN.
+services:
+  backend:
+    environment:
+      LLM_API_URL: http://model-tunnel:11434/v1/chat/completions
+      LLM_MODEL: gemma3:12b
+      LLM_TIMEOUT: 120
+  model-tunnel:
+    build:
+      context: .
+      dockerfile: Dockerfile.tunnel
+    volumes:
+      - ${SAHAY_SSH_AGENT:?Set SAHAY_SSH_AGENT to the current SSH_AUTH_SOCK}:/ssh-agent:ro
+      - ${HOME}/.ssh/known_hosts:/root/.ssh/known_hosts:ro
+    mem_limit: 64m
+    restart: unless-stopped

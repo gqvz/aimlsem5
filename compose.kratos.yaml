@@ -1,0 +1,19 @@
+# Reuse an existing Kitty/OpenSSH mux to Kratos. Set SAHAY_SSH_MUX in .env.
+services:
+  backend:
+    environment:
+      LLM_API_URL: http://model-tunnel:11434/v1/chat/completions
+      LLM_MODEL: gemma3:12b
+      LLM_API_KEY: ""
+      LLM_TIMEOUT: 120
+    depends_on:
+      - model-tunnel
+  model-tunnel:
+    build:
+      context: .
+      dockerfile: Dockerfile.mux
+    volumes:
+      - ${SAHAY_SSH_MUX:?Set SAHAY_SSH_MUX to the active Zeb SSH mux}:/ssh-mux:ro
+    mem_limit: 64m
+    cpus: 0.25
+    restart: unless-stopped
