@@ -1,27 +1,29 @@
 # Graph Report - aiml  (2026-10-14)
 
 ## Corpus Check
-- 104 files · ~334,859 words
+- 115 files · ~338,539 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 24 file(s) not represented in the graph (top: .ttf 8, (none) 4, .xml 2)
 
 ## Summary
-- 1253 nodes · 2913 edges · 57 communities (39 shown, 18 thin omitted)
-- Extraction: 91% EXTRACTED · 9% INFERRED · 0% AMBIGUOUS · INFERRED: 269 edges (avg confidence: 0.88)
+- 1404 nodes · 3266 edges · 71 communities (43 shown, 28 thin omitted)
+- Extraction: 92% EXTRACTED · 8% INFERRED · 0% AMBIGUOUS · INFERRED: 275 edges (avg confidence: 0.88)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `61935e5e`
+- Built from commit: `13cf37c1`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
 - test_model_configuration.py
-- WellbeingUi.kt
+- WellbeingLabel
 - respond
+- SahayUi.kt
 - app.js
 - MainActivity.kt
 - CareUi.kt
+- ApiClient
 - Gentle Breathing Exercise
 - pipeline.py
 - Sahay Updated System Architecture (ARCHITECTURE.md)
@@ -46,27 +48,41 @@
 - Api
 - Rebuild and emulator validation - 13 October 2026
 - .transcribeAudio
+- WellbeingUi.kt
 - Explore Wellbeing Activities (no streaks)
 - kratos-stream.sh
 - test_api_contract.py
 - Sahay rewrite plan (non-UI)
 - .__call__
-- engine.py
+- safety/__init__.py
 - CLAUDE.md
 - json
 - llm.py
-- accounts.py
-- ApiError
+- create_app
+- re
 - Sahay README
-- shares.py
-- ModelError
+- Models.kt
+- BoundedModel
 - Stitch Prompt: Clinician and Account Screens
+- Repositories.kt
+- engine.py
 - run
 - Model Configuration Update (12 Oct 2026)
+- ContractTest
+- AuthRepository
+- similarity.py
+- CareRepository
+- ShareRepository
 - Kratos LLM restored — 13 October 2026
+- .stop
+- speech.py
+- RateLimiter
+- Content
+- ModelHttpTests
+- SpeechTests
 
 ## God Nodes (most connected - your core abstractions)
-1. `SahayViewModel` - 134 edges
+1. `SahayViewModel` - 135 edges
 2. `User` - 57 edges
 3. `Sahay Updated System Architecture (ARCHITECTURE.md)` - 43 edges
 4. `ApiError` - 35 edges
@@ -75,19 +91,19 @@
 7. `SahayApp()` - 27 edges
 8. `WellbeingLabel()` - 27 edges
 9. `check()` - 27 edges
-10. `Screen` - 22 edges
+10. `create_app()` - 23 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `Sahay Updated Architecture PDF (5 Oct snapshot)` --semantically_similar_to--> `Sahay Updated System Architecture (ARCHITECTURE.md)`  [INFERRED] [semantically similar]
   output/pdf/Sahay_Updated_Architecture.pdf → ARCHITECTURE.md
 - `Phase 5: Android non-UI layers` --references--> `SahayViewModel`  [INFERRED]
   REWRITE_PLAN.md → android/app/src/main/java/org/sahay/app/SahayViewModel.kt
+- `Why the view model is not rewired yet` --references--> `SahayViewModel`  [INFERRED]
+  REWRITE_PLAN.md → android/app/src/main/java/org/sahay/app/SahayViewModel.kt
 - `Safety (highest priority, this is a cancer-patient mental-health app)` --references--> `_passes_output_check()`  [INFERRED]
   REWRITE_PLAN.md → tests/test_output_filter.py
 - `On-device Demo Fallback` --semantically_similar_to--> `Fixed Localized Fallback`  [INFERRED] [semantically similar]
   android/README.md → ARCHITECTURE.md
-- `Sahay Updated Architecture PDF (5 Oct snapshot)` --references--> `gemma3:12b via Ollama (resume-ollama)`  [EXTRACTED]
-  output/pdf/Sahay_Updated_Architecture.pdf → ARCHITECTURE.md
 
 ## Import Cycles
 - None detected.
@@ -109,31 +125,35 @@
 - **Sahay Android QA Screenshots** — artifacts_qa_activities, artifacts_qa_activities_hindi, artifacts_qa_arrival, artifacts_qa_arrival_final, artifacts_qa_art [INFERRED 0.85]
 - **Tamil small-screen refinement QA pass** — artifacts_qa_refinement_small_tamil_breathing, artifacts_qa_refinement_small_tamil_breathing_final, artifacts_qa_refinement_small_tamil_explore, artifacts_qa_refinement_small_tamil_explore_final, artifacts_qa_refinement_small_tamil_navigation_final, artifacts_qa_refinement_small_tamil_settings [INFERRED 0.85]
 
-## Communities (57 total, 18 thin omitted)
+## Communities (71 total, 28 thin omitted)
 
 ### Community 0 - "test_model_configuration.py"
-Cohesion: 0.10
-Nodes (3): LocalProvider, wire(), SpeechTests
+Cohesion: 0.12
+Nodes (3): CatalogueParityTests, LocalProvider, wire()
 
-### Community 1 - "WellbeingUi.kt"
-Cohesion: 0.05
-Nodes (29): AmbientAudio, AgentInspector(), CareConversation(), CareInbox(), CareMessage(), SettingsPage(), SettingSwitch(), CalmFrame() (+21 more)
+### Community 1 - "WellbeingLabel"
+Cohesion: 0.19
+Nodes (27): AgentInspector(), CareConversation(), CareInbox(), CareMessage(), SettingsPage(), SettingSwitch(), CalmFrame(), CalmTopBar() (+19 more)
 
 ### Community 2 - "respond"
-Cohesion: 0.06
-Nodes (11): respond(), AgentTests, CatalogueParityTests, SpecialistModel, EngineTests, FakeCrisisModel, FakeFabricatedCitationModel, FakeSafeModel (+3 more)
+Cohesion: 0.07
+Nodes (10): respond(), AgentTests, SpecialistModel, EngineTests, FakeCrisisModel, FakeFabricatedCitationModel, FakeSafeModel, FakeUnsafeModel (+2 more)
 
 ### Community 4 - "app.js"
 Cohesion: 0.14
 Nodes (39): CARD_COPY, CARD_FALLBACK, cardCopy(), changeView(), chat(), clearAll(), e(), exercise() (+31 more)
+
+### Community 7 - "ApiClient"
+Cohesion: 0.09
+Nodes (9): ApiClient, ApiError, HttpRequest, HttpResponse, HttpTransport, UrlConnectionTransport, ApiClientTest, FakeTransport (+1 more)
 
 ### Community 8 - "Gentle Breathing Exercise"
 Cohesion: 0.09
 Nodes (29): QA: Garden Pairs memory game (8 face-down cards, 0 of 4 pairs), QA: Garden Pairs memory game (reveal state), QA: AI model settings with keyboard open, QA: AI model settings provider HTTP 403 error, QA: Today plan screen (sound sanctuary, gentle breath, companion), QA: Arrival screen 'Take a little pause' with garden, QA: Care team sign in, email field with keyboard (CTA disabled), QA: Care team sign in, password field with keyboard (CTA enabled) (+21 more)
 
 ### Community 10 - "pipeline.py"
-Cohesion: 0.18
-Nodes (11): activity_plan(), Ctx, draft(), _history(), localise(), result(), route(), safety_gate() (+3 more)
+Cohesion: 0.15
+Nodes (13): judge_client(), activity_plan(), Ctx, draft(), _history(), localise(), result(), route() (+5 more)
 
 ### Community 11 - "Sahay Updated System Architecture (ARCHITECTURE.md)"
 Cohesion: 0.13
@@ -143,16 +163,12 @@ Nodes (22): On-device Demo Fallback, Sahay Updated System Architecture (ARCHITEC
 Cohesion: 0.22
 Nodes (22): nativeText(), BottomNavigation(), ChatScreen(), ExerciseScreen(), HelpCard(), HelpScreen(), InfoScreen(), MessageBubble() (+14 more)
 
-### Community 14 - "SessionStore.kt"
-Cohesion: 0.11
-Nodes (4): Content, LanguageOption, SessionStore, StoredSession
-
 ### Community 15 - "Screen"
 Cohesion: 0.10
 Nodes (21): Screen, ACTIVITY, ADMIN, AGENT_INSPECT, CARE, CHAT, CLINICIAN_AUTH, CLINICIAN_DETAIL (+13 more)
 
 ### Community 16 - "SahayViewModel.kt"
-Cohesion: 0.10
+Cohesion: 0.12
 Nodes (3): AccountHttpError, CareQuestion, ChatMessage
 
 ### Community 17 - "gemma3:12b via Ollama (resume-ollama)"
@@ -177,7 +193,7 @@ Nodes (15): Gentle Breathing Exercise Screen, Gentle Breathing Exercise, Clinici
 
 ### Community 22 - "test_guard.py"
 Cohesion: 0.06
-Nodes (34): has_medication_directive(), check(), check_deterministic(), GuardVerdict, Completer, judge(), parse_verdict(), _cosine() (+26 more)
+Nodes (31): check(), GuardVerdict, Completer, judge(), parse_verdict(), Judge, test_approved_numbers_and_sources_pass(), test_close_paraphrases_are_blocked_without_a_model() (+23 more)
 
 ### Community 23 - "Explore/Activities Screen QA (English)"
 Cohesion: 0.19
@@ -192,20 +208,16 @@ Cohesion: 0.24
 Nodes (9): Care Conversation Thread (Return, Final), Clinician Sign-in Screen, Clinician Patient Conversations List, Clinician Review Queue (Shared Visit Briefs), Clinician Settings Screen (Final), Clinician Review Queue with Bottom Tabs (Final), Sahay Clinician Portal, Multilingual and Larger-Text Accessibility (+1 more)
 
 ### Community 26 - "routes.py"
-Cohesion: 0.17
-Nodes (33): accept_invite(), admin_audit(), admin_users(), cards(), care_contacts(), care_file(), care_messages(), care_open() (+25 more)
+Cohesion: 0.07
+Nodes (87): downgrade(), upgrade(), current_user(), throttle(), dependency(), accept_invite(), admin_audit(), admin_users() (+79 more)
 
 ### Community 27 - "db.py"
-Cohesion: 0.07
-Nodes (15): create_app(), lifespan(), client_ip(), current_user(), json_body(), throttle(), dependency(), main() (+7 more)
+Cohesion: 0.12
+Nodes (5): client_ip(), json_body(), Settings, get_engine(), _path()
 
 ### Community 28 - "Mobile UI Refinement"
 Cohesion: 0.31
 Nodes (3): Mobile UI Refinement, Hoober: How Users Hold Mobile Devices (2013), Mehrotra et al.: Action Bar Adaptations for One-Handed Use (2022)
-
-### Community 31 - "Api"
-Cohesion: 0.05
-Nodes (8): dispose_all(), RateLimiter, Api, ModelHttpTests, assess(), _param(), test_patterns_use_only_their_own_script(), test_safety_gate()
 
 ### Community 32 - "Rebuild and emulator validation - 13 October 2026"
 Cohesion: 0.22
@@ -221,71 +233,91 @@ Nodes (23): get_session(), session_scope(), test_admin_invite_accept_and_deactiv
 
 ### Community 42 - "Sahay rewrite plan (non-UI)"
 Cohesion: 0.09
-Nodes (21): 1. What I read, 2. Findings, 2a. Progress, 3. Target architecture, 4. Phased plan, 5. Testing and quality gates, 6. Risks, 7. Decisions needed (+13 more)
+Nodes (22): 1. What I read, 2. Findings, 2a. Progress, 3. Target architecture, 4. Phased plan, 5. Testing and quality gates, 6. Risks, 7. Decisions needed (+14 more)
 
-### Community 44 - "engine.py"
-Cohesion: 0.14
-Nodes (10): rule_risk(), choose_card(), choose_action(), assess(), matches(), more_cautious(), RiskAssessment, _variants() (+2 more)
+### Community 44 - "safety/__init__.py"
+Cohesion: 0.21
+Nodes (4): RiskAssessment, _variants(), normalize(), repair_typos()
 
 ### Community 46 - "json"
-Cohesion: 0.25
-Nodes (5): main(), _headers(), status(), synthesize(), transcribe()
+Cohesion: 0.24
+Nodes (3): main(), call(), save()
 
 ### Community 47 - "llm.py"
-Cohesion: 0.11
-Nodes (7): judge_client(), allowed_model_hosts(), model_for_request(), ModelClient, public_model_configuration(), test_model_connection(), ModelConfigurationTests
+Cohesion: 0.10
+Nodes (8): allowed_model_hosts(), model_for_request(), ModelClient, ModelError, _NoModelRedirect, public_model_configuration(), test_model_connection(), ModelConfigurationTests
 
-### Community 48 - "accounts.py"
-Cohesion: 0.19
-Nodes (26): Audit, Invitation, UserSession, hash_password(), hash_token(), new_id(), new_token(), verify_password() (+18 more)
+### Community 48 - "create_app"
+Cohesion: 0.15
+Nodes (7): create_app(), lifespan(), main(), seed_demo(), init_db(), test_every_route_is_documented_with_its_method(), test_openapi_snapshot_is_current()
 
-### Community 49 - "ApiError"
-Cohesion: 0.17
-Nodes (15): downgrade(), upgrade(), ApiError, Base, CareFile, CareMessage, CareThread, attachment() (+7 more)
+### Community 49 - "re"
+Cohesion: 0.15
+Nodes (9): bundle(), has_medication_directive(), check_deterministic(), matches(), test_activities_are_well_formed(), test_bundle_is_json_and_version_is_stable(), test_every_language_has_every_fixed_reply(), test_safety_copy_always_names_both_help_numbers() (+1 more)
 
 ### Community 50 - "Sahay README"
 Cohesion: 0.18
 Nodes (11): Sahay for Android README, Sahay_Pixel_9 Low-memory Emulator, Clinician File Request Fulfillment, Knowledge Agent, Sahay Overhaul Validation (5 Oct 2026), Sahay README, Four NCI Information Cards, Quick Hide Screen Cover (+3 more)
 
-### Community 51 - "shares.py"
-Cohesion: 0.46
-Nodes (9): Share, clinician_view(), create(), mine(), _owned(), queue(), review(), revoke() (+1 more)
-
-### Community 52 - "ModelError"
-Cohesion: 0.20
-Nodes (3): BoundedModel, ModelError, _NoModelRedirect
+### Community 51 - "Models.kt"
+Cohesion: 0.23
+Nodes (9): CareFile, CareMessage, map(), PlanItem, Reply, SourceCard, strOrNull(), Suggestion (+1 more)
 
 ### Community 53 - "Stitch Prompt: Clinician and Account Screens"
 Cohesion: 0.22
 Nodes (5): Two-way Care Messages and Files, SQLite Persistent Storage (/data volume), Stitch Prompt: Clinician and Account Screens, Admin Bookkeeping Screens, Clinician Review Queue Screen
 
+### Community 54 - "Repositories.kt"
+Cohesion: 0.13
+Nodes (5): Health, AdminRepository, Attachment, ChatRepository, ModelConfig
+
+### Community 55 - "engine.py"
+Cohesion: 0.21
+Nodes (6): rule_risk(), choose_card(), fallback_response(), _load(), choose_action(), assess()
+
 ### Community 56 - "run"
-Cohesion: 0.24
-Nodes (12): fallback_response(), run(), Scripted, test_a_guard_block_replaces_the_reply_with_fixed_copy(), test_english_turn_uses_three_calls(), test_hindi_turn_adds_one_translation_call(), test_model_cannot_lower_a_rule_detected_risk(), test_model_cannot_pick_an_unknown_tool() (+4 more)
+Cohesion: 0.28
+Nodes (11): run(), Scripted, test_a_guard_block_replaces_the_reply_with_fixed_copy(), test_english_turn_uses_three_calls(), test_hindi_turn_adds_one_translation_call(), test_model_cannot_lower_a_rule_detected_risk(), test_model_cannot_pick_an_unknown_tool(), test_model_may_raise_risk() (+3 more)
 
 ### Community 57 - "Model Configuration Update (12 Oct 2026)"
 Cohesion: 0.40
 Nodes (4): OpenCode space-bunny-free Default Model, Model Configuration Update (12 Oct 2026), provider_error Field on Fallbacks, OpenCode Free-Tier HTTP 403 Limitation
 
+### Community 59 - "AuthRepository"
+Cohesion: 0.23
+Nodes (3): SessionInfo, User, AuthRepository
+
+### Community 60 - "similarity.py"
+Cohesion: 0.30
+Nodes (5): _cosine(), _grams(), Hit, _norm(), SimilarityGuard
+
+### Community 61 - "CareRepository"
+Cohesion: 0.20
+Nodes (3): CareThread, Contact, CareRepository
+
+### Community 66 - "speech.py"
+Cohesion: 0.29
+Nodes (4): _headers(), status(), synthesize(), transcribe()
+
 ## Knowledge Gaps
 - **45 isolated node(s):** `WELCOME`, `RESTORING`, `HOME`, `ACTIVITY`, `CARE` (+40 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 374 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **18 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 394 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **28 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `revoke_share()` connect `routes.py` to `shares.py`, `SahayUi.kt`?**
-  _High betweenness centrality (0.208) - this node is a cross-community bridge._
-- **Are the 3 inferred relationships involving `SahayViewModel` (e.g. with `Content` and `SessionStore`) actually correct?**
-  _`SahayViewModel` has 3 INFERRED edges - model-reasoned connections that need verification._
+- **Why does `revoke_share()` connect `routes.py` to `SahayUi.kt`?**
+  _High betweenness centrality (0.188) - this node is a cross-community bridge._
+- **Are the 4 inferred relationships involving `SahayViewModel` (e.g. with `Content` and `SessionStore`) actually correct?**
+  _`SahayViewModel` has 4 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `WELCOME`, `RESTORING`, `HOME` to the rest of the system?**
   _45 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `test_model_configuration.py` be split into smaller, more focused modules?**
-  _Cohesion score 0.10476190476190476 - nodes in this community are weakly interconnected._
-- **Why does `SahayViewModel` connect `SahayViewModel` to `WellbeingUi.kt`, `.navigate`, `.transcribeAudio`, `MainActivity.kt`, `.accountRequest`, `Sahay rewrite plan (non-UI)`, `SahayApp`, `SessionStore.kt`, `SahayViewModel.kt`, `Composable`, `.send`, `JSONObject`?**
-  _High betweenness centrality (0.203) - this node is a cross-community bridge._
+  _Cohesion score 0.11578947368421053 - nodes in this community are weakly interconnected._
+- **Why does `SahayViewModel` connect `SahayViewModel` to `WellbeingLabel`, `.transcribeAudio`, `Content`, `MainActivity.kt`, `.accountRequest`, `Sahay rewrite plan (non-UI)`, `SahayApp`, `SessionStore.kt`, `SahayViewModel.kt`, `Composable`, `.send`, `JSONObject`?**
+  _High betweenness centrality (0.186) - this node is a cross-community bridge._
 - **Are the 48 inferred relationships involving `User` (e.g. with `current_user()` and `admin_audit()`) actually correct?**
   _`User` has 48 INFERRED edges - model-reasoned connections that need verification._
-- **Should `WellbeingUi.kt` be split into smaller, more focused modules?**
-  _Cohesion score 0.05401234567901234 - nodes in this community are weakly interconnected._
+- **Should `respond` be split into smaller, more focused modules?**
+  _Cohesion score 0.07272727272727272 - nodes in this community are weakly interconnected._

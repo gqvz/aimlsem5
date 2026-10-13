@@ -1,9 +1,9 @@
 {
   "android/app/build.gradle.kts": {
-    "mtime": 1790612249.9896538,
-    "seen": 1791816791.5420463,
-    "ast_hash": "2e58403d01cf924bc42de3e6bf0c256f",
-    "semantic_hash": "2e58403d01cf924bc42de3e6bf0c256f"
+    "mtime": 1791919528.3863373,
+    "seen": 1791919688.6192935,
+    "ast_hash": "322eeea40117d5968466cbdce9a1fd13",
+    "semantic_hash": ""
   },
   "android/app/src/main/assets/content.json": {
     "mtime": 1790612286.0100768,
@@ -240,9 +240,9 @@
     "semantic_hash": "56b3ab2f33e1fa80c306b028ebe2e997"
   },
   "README.md": {
-    "mtime": 1791919077.4534883,
-    "seen": 1791919147.6053503,
-    "ast_hash": "ca796dd8f62744bc62187147f3b586ae",
+    "mtime": 1791919666.6745646,
+    "seen": 1791919688.6256528,
+    "ast_hash": "57c7f964e93a806b6a487371456ed94b",
     "semantic_hash": ""
   },
   "UI_REFINEMENT.md": {
@@ -942,9 +942,9 @@
     "semantic_hash": ""
   },
   "REWRITE_PLAN.md": {
-    "mtime": 1791919425.5620759,
-    "seen": 1791919428.9618468,
-    "ast_hash": "2ba0eeae487ed20b3f93f42708814869",
+    "mtime": 1791919666.6749027,
+    "seen": 1791919688.6257086,
+    "ast_hash": "9f1164314ae4b95f723174987054a08e",
     "semantic_hash": ""
   },
   "artifacts/qa/2026-10-13/kratos-gemma-chat.png": {
@@ -966,9 +966,9 @@
     "semantic_hash": ""
   },
   "contract/openapi.json": {
-    "mtime": 1791919077.2353652,
-    "seen": 1791919147.6030571,
-    "ast_hash": "8639352d9c7fc2a7e40ef2e1550e4442",
+    "mtime": 1791919631.3672447,
+    "seen": 1791919688.6213994,
+    "ast_hash": "878f6b679aeb6782e097a7571a3d7732",
     "semantic_hash": ""
   },
   "sahay/api/__init__.py": {
@@ -990,9 +990,9 @@
     "semantic_hash": ""
   },
   "sahay/api/routes.py": {
-    "mtime": 1791918995.4299119,
-    "seen": 1791919147.6039884,
-    "ast_hash": "13df2067755351a956668050a6d0b39a",
+    "mtime": 1791919630.384113,
+    "seen": 1791919688.6225212,
+    "ast_hash": "2c51a9490742924a8233b323b7603f63",
     "semantic_hash": ""
   },
   "sahay/cli.py": {
@@ -1104,9 +1104,9 @@
     "semantic_hash": ""
   },
   "sahay/domain/content.py": {
-    "mtime": 1791919278.1630034,
-    "seen": 1791919428.9597366,
-    "ast_hash": "8187ac2a149b52f416a48cf800cb4ca7",
+    "mtime": 1791919630.3832455,
+    "seen": 1791919688.6227736,
+    "ast_hash": "b0c92d06359289114b7e02d21bd69c65",
     "semantic_hash": ""
   },
   "sahay/domain/guard/claims.py": {
@@ -1143,6 +1143,72 @@
     "mtime": 1791919346.163521,
     "seen": 1791919428.96121,
     "ast_hash": "d536d7f0b8424e7b7aa49fd300e4ff6f",
+    "semantic_hash": ""
+  },
+  "android/app/src/main/java/org/sahay/app/data/ApiClient.kt": {
+    "mtime": 1791919528.3859346,
+    "seen": 1791919688.6207504,
+    "ast_hash": "42e9a50a4983a267d2efc9c33b41f7ad",
+    "semantic_hash": ""
+  },
+  "android/app/src/main/java/org/sahay/app/data/Models.kt": {
+    "mtime": 1791919502.562167,
+    "seen": 1791919688.6207552,
+    "ast_hash": "653eb5d1e01d0bb2224b73b9e483612a",
+    "semantic_hash": ""
+  },
+  "android/app/src/main/java/org/sahay/app/data/Repositories.kt": {
+    "mtime": 1791919528.3861563,
+    "seen": 1791919688.620759,
+    "ast_hash": "4d03d65a25b9ebfe2af550e57051b091",
+    "semantic_hash": ""
+  },
+  "android/app/src/test/java/org/sahay/app/data/ApiClientTest.kt": {
+    "mtime": 1791919528.3932116,
+    "seen": 1791919688.620763,
+    "ast_hash": "d0badbd5758b7673c11697d514acd202",
+    "semantic_hash": ""
+  },
+  "android/app/src/test/java/org/sahay/app/data/ContractTest.kt": {
+    "mtime": 1791919528.3952115,
+    "seen": 1791919688.620767,
+    "ast_hash": "fb10b88c6c9d212b7374d1a72a5328ad",
+    "semantic_hash": ""
+  },
+  "content/activities.json": {
+    "mtime": 1791919616.071781,
+    "seen": 1791919688.62138,
+    "ast_hash": "8496a20ec70ddf2b96887bcea0810cc4",
+    "semantic_hash": ""
+  },
+  "content/fallback.json": {
+    "mtime": 1791919616.0715966,
+    "seen": 1791919688.621385,
+    "ast_hash": "2b6fe160d16b2010982afe667561d2ba",
+    "semantic_hash": ""
+  },
+  "content/intros.json": {
+    "mtime": 1791919616.0719545,
+    "seen": 1791919688.6213896,
+    "ast_hash": "6009e5c80821fa879a35a03065c51dec",
+    "semantic_hash": ""
+  },
+  "content/sources.json": {
+    "mtime": 1791919616.0713096,
+    "seen": 1791919688.6213934,
+    "ast_hash": "48ab280735bd650428354ca78ecc56fd",
+    "semantic_hash": ""
+  },
+  "tests/test_content.py": {
+    "mtime": 1791919630.3892455,
+    "seen": 1791919688.6247277,
+    "ast_hash": "96223e9074819c48c6445a99c1267432",
+    "semantic_hash": ""
+  },
+  "tools/export_contract_fixtures.py": {
+    "mtime": 1791919591.6980705,
+    "seen": 1791919688.6252196,
+    "ast_hash": "1c3c3123d71610059f02fc09293e4129",
     "semantic_hash": ""
   }
 }
