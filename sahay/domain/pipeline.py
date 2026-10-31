@@ -27,6 +27,8 @@ from sahay.domain.content import (
     SOURCES,
     choose_card,
     fallback_response,
+    india_guidance,
+    is_financial,
 )
 from sahay.domain.guard.config import judge_client
 from sahay.domain.routing import choose_action
@@ -140,6 +142,8 @@ def route(c: Ctx) -> None:
         c.step("Supervisor", "delegate", c.action, "llm")
     else:
         c.step("Supervisor", "delegate", c.action, "llm" if c.model_action else "fallback")
+    if requested is None and c.action == "reflect" and is_financial(c.english):
+        c.action = "info"  # cost worries get the curated scheme card, whatever tool the model picked
 
 
 def activity_plan(c: Ctx) -> tuple[str, str]:
@@ -184,7 +188,7 @@ def draft(c: Ctx, card: dict | None) -> str:
         c.step("Knowledge", "draft_reply", c.action, "llm")
         return c.model.chat(prompts.KNOWLEDGE + f"Source: {card['summary']} Include {card['url']}", f"User: {c.english}", 350)
     c.step("Emotional support", "draft_reply", c.action, "llm")
-    return c.model.chat(prompts.SUPPORT, f"Context: {_history(c, 4)}\nUser: {c.english}", 200)
+    return c.model.chat(prompts.SUPPORT + india_guidance(c.english), f"Context: {_history(c, 4)}\nUser: {c.english}", 200)
 
 
 def localise(c: Ctx, text: str) -> str:
@@ -254,7 +258,7 @@ def run(data: dict[str, Any], client: Any) -> dict[str, Any]:
         c.step("Knowledge", "curated_lookup", "no_source")
         return result(c, FALLBACK[lang]["info_unavailable"], "fixed")
 
-    fallback = BRIEF_INTRO[lang] if c.action == "brief" else fallback_response(lang, c.action, card, card_key)
+    fallback = BRIEF_INTRO[lang] if c.action == "brief" else fallback_response(lang, c.action, card, card_key, c.english)
     if card:
         fallback += "\n\n" + card["title"] + " — " + card["url"]
     output, mode = fallback, "demo"

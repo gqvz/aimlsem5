@@ -32,6 +32,12 @@ _intros = _load("intros.json")
 BRIEF_INTRO: dict[str, str] = _intros["brief"]
 ACTIVITY_INTRO: dict[str, str] = _intros["activity"]
 
+_india = _load("india.json")
+INDIA_TOPICS: dict[str, tuple[re.Pattern[str], str]] = {
+    k: (re.compile(v["pattern"], re.IGNORECASE), v["guidance"]) for k, v in _india["topics"].items()}
+CHECKINS: dict[str, dict[str, str]] = _india["checkins"]
+_FINANCIAL = re.compile(_india["financial_pattern"], re.IGNORECASE)
+
 CONTENT_VERSION = hashlib.sha256(
     b"".join((CONTENT_DIR / n).read_bytes() for n in sorted(p.name for p in CONTENT_DIR.glob("*.json")))).hexdigest()[:12]
 
@@ -39,12 +45,27 @@ CONTENT_VERSION = hashlib.sha256(
 def bundle() -> dict[str, Any]:
     """Everything a client may cache: served at /api/content."""
     return {"version": CONTENT_VERSION, "languages": LANGS, "sources": SOURCES, "source_summaries": SOURCE_SUMMARIES,
-            "activities": [{"id": k, **v} for k, v in ACTIVITIES.items()],
+            "activities": [{"id": k, **v} for k, v in ACTIVITIES.items()], "checkins": CHECKINS,
             "safety_copy": {lang: {k: FALLBACK[lang][k] for k in ("crisis", "medical", "medical_boundary")} for lang in FALLBACK}}
 
 
+def is_financial(text: str) -> bool:
+    return bool(_FINANCIAL.search(text))
+
+
+def india_topics(text: str) -> list[str]:
+    """Indian-context themes mentioned in `text`, most specific first."""
+    return [key for key, (pattern, _) in INDIA_TOPICS.items() if pattern.search(text)]
+
+
+def india_guidance(text: str) -> str:
+    return "".join(" " + INDIA_TOPICS[key][1] for key in india_topics(text))
+
+
 def choose_card(text: str) -> tuple[str | None, dict[str, str] | None]:
-    if re.search(r"\b(fever|infection|temperature)\b", text, re.IGNORECASE):
+    if is_financial(text):
+        key = "financial"
+    elif re.search(r"\b(fever|infection|temperature)\b", text, re.IGNORECASE):
         key = "infection"
     elif re.search(r"\b(relax|meditat|mindful|ground)\b", text, re.IGNORECASE):
         key = "relaxation"
@@ -57,7 +78,9 @@ def choose_card(text: str) -> tuple[str | None, dict[str, str] | None]:
     return key, SOURCES[key]
 
 
-def fallback_response(lang: str, action: str, card: dict[str, str] | None, card_key: str | None) -> str:
+def fallback_response(lang: str, action: str, card: dict[str, str] | None, card_key: str | None, text: str = "") -> str:
+    if action == "reflect" and (topics := india_topics(text)):
+        return CHECKINS[topics[0]][lang]
     if action == "coping":
         return FALLBACK[lang]["coping"]
     if action == "info" and card and card_key:

@@ -89,3 +89,26 @@ def test_a_guard_block_replaces_the_reply_with_fixed_copy():
     result = run({"text": "I am worried tonight", "language": "en"}, model)
     assert result["mode"] == "fallback" and "double your dose" not in result["text"]
     assert result["agent_trace"][-1]["agent"] == "Guard" and result["agent_trace"][-1]["outcome"].startswith("blocked")
+
+
+def test_cost_worry_gets_the_scheme_card_even_if_the_model_picks_reflect():
+    model = Scripted(understand={"english": "I cannot afford the hospital bills", "risk": "ordinary", "action": "reflect"},
+                     draft="Many people worry about cost. Government schemes may help: https://pmjay.gov.in/")
+    result = run({"text": "I cannot afford the hospital bills", "language": "en"}, model)
+    assert result["action"] == "info" and result["card"]["id"] == "financial"
+
+
+def test_india_guidance_reaches_the_support_prompt_and_offline_checkin_is_curated():
+    seen = []
+
+    class Spy(Scripted):
+        def chat(self, system, user, max_tokens=450):
+            if "Emotional support agent" in system:
+                seen.append(system)
+            return super().chat(system, user, max_tokens)
+
+    text = "Navratri starts tomorrow and I want to keep the fast"
+    run({"text": text, "language": "en"}, Spy(understand={"english": text, "risk": "ordinary", "action": "reflect"}))
+    assert seen and "never advise whether to fast" in seen[0].lower()
+    offline = run({"text": text, "language": "hi"}, ModelClient(url="", model="", key=""))
+    assert offline["mode"] == "demo" and "व्रत" in offline["text"]

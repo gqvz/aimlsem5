@@ -1,0 +1,47 @@
+{
+  "topics": {
+    "observance": {
+      "pattern": "\\b(fasting|fasts?|vrat|roza|ramzan|ramadan|navratri|ekadashi|karva chauth|diwali|holi|eid|durga puja|pongal|onam|ganesh\\w*|festivals?)\\b",
+      "guidance": "Cultural context: the person mentions a fast, festival or religious observance. Acknowledge its meaning respectfully. Never advise whether to fast or what to eat; say the care team is the right place to ask about food and fasting."
+    },
+    "journey": {
+      "pattern": "\\b(far from home|away from home|(?:other|another|different) city|travel\\w*|lodg\\w*|accommodation|dharamshala|stay\\w* near (?:the )?hospital|rented room)\\b",
+      "guidance": "Cultural context: many patients travel far from home for treatment, stay in lodging near the hospital, apart from family and sometimes among an unfamiliar language. Acknowledge the strain; offer no logistical or financial facts."
+    },
+    "faith": {
+      "pattern": "\\b(pray\\w*|god|temple|mosque|church|gurdwara|puja|faith|karma|curse[ds]?|destiny|fate|ayurved\\w*|homeopath\\w*|naturopath\\w*|herbal|home remed\\w*|haldi|turmeric|kadha|giloy|baba|astrolog\\w*|nazar)\\b",
+      "guidance": "Cultural context: faith and traditional practice (prayer, Ayurveda, home remedies) matter to many people. Respect them without endorsing any as a cure or a substitute for treatment, and gently suggest telling the care team about any remedy. Never present blame, karma or curses as true."
+    },
+    "family": {
+      "pattern": "\\b(famil\\w*|relatives?|in-?laws?|elders?|burden)\\b|\\b(?:not|never|n't)\\s+(?:been\\s+)?told\\b|\\b(?:hid\\w*|secret)\\b[^.]{0,30}\\b(?:cancer|diagnosis|illness)\\b|\\b(?:cancer|diagnosis|illness)\\b[^.]{0,30}\\b(?:hid\\w*|secret)\\b",
+      "guidance": "Cultural context: in many Indian families illness is handled collectively and relatives may decide what the patient is told. Never advise hiding or revealing a diagnosis or taking sides; explore what the person wants and how supported they feel."
+    }
+  },
+  "checkins": {
+    "observance": {
+      "en": "Festivals and fasts carry real meaning, and treatment can make them feel complicated. Food and fasting are worth checking with your care team first. What would you like this occasion to look like for you?",
+      "hi": "त्योहार और व्रत का गहरा अर्थ होता है, और इलाज के कारण वे उलझन भरे लग सकते हैं। खाने और व्रत के बारे में पहले अपने देखभाल दल से पूछ लेना अच्छा रहेगा। आप इस अवसर को अपने लिए कैसा देखना चाहेंगे?",
+      "bn": "উৎসব ও উপবাসের গভীর অর্থ থাকে, আর চিকিৎসার কারণে সেগুলো জটিল মনে হতে পারে। খাবার ও উপবাস নিয়ে আগে চিকিৎসা দলের সঙ্গে কথা বলে নেওয়া ভালো। এই উপলক্ষটি আপনার কাছে কেমন হোক বলে আপনি চান?",
+      "ta": "பண்டிகைகளும் விரதங்களும் ஆழ்ந்த அர்த்தம் கொண்டவை; சிகிச்சை அவற்றை சிக்கலாக உணரச் செய்யலாம். உணவு மற்றும் விரதம் பற்றி முதலில் உங்கள் சிகிச்சைக் குழுவிடம் கேட்பது நல்லது. இந்த நாள் உங்களுக்கு எப்படி இருக்க வேண்டும் என்று விரும்புகிறீர்கள்?"
+    },
+    "journey": {
+      "en": "Staying away from home for treatment can be tiring, and missing your people adds to it. What is the hardest part of being away right now?",
+      "hi": "इलाज के लिए घर से दूर रहना थका देने वाला होता है, और अपनों की याद उसे और भारी कर देती है। अभी दूर रहने में सबसे मुश्किल क्या लग रहा है?",
+      "bn": "চিকিৎসার জন্য বাড়ি থেকে দূরে থাকা ক্লান্তিকর, আর প্রিয়জনদের অভাব তা আরও ভারী করে তোলে। এখন দূরে থাকার সবচেয়ে কঠিন দিক কোনটি?",
+      "ta": "சிகிச்சைக்காக வீட்டை விட்டுத் தொலைவில் இருப்பது சோர்வைத் தரும்; அன்பானவர்களின் பிரிவு அதை இன்னும் கனமாக்கும். இப்போது தொலைவில் இருப்பதில் மிகவும் கடினமானது எது?"
+    },
+    "faith": {
+      "en": "Faith and family traditions can be a real comfort during treatment. If you are also using any herbal or home remedies, it is worth telling your care team so they can check them with your treatment. What has been comforting you most lately?",
+      "hi": "आस्था और पारिवारिक परंपराएँ इलाज के दौरान सच्चा सहारा बन सकती हैं। अगर आप कोई जड़ी-बूटी या घरेलू उपाय भी ले रहे हैं, तो अपने देखभाल दल को बताना अच्छा रहता है ताकि वे उसे आपके इलाज के साथ जाँच सकें। हाल में आपको सबसे ज़्यादा सुकून किससे मिला है?",
+      "bn": "বিশ্বাস ও পারিবারিক ঐতিহ্য চিকিৎসার সময় সত্যিকারের ভরসা হতে পারে। আপনি যদি কোনো ভেষজ বা ঘরোয়া টোটকাও ব্যবহার করেন, তাহলে চিকিৎসা দলকে জানানো ভালো, যাতে তারা আপনার চিকিৎসার সঙ্গে তা মিলিয়ে দেখতে পারেন। ইদানীং কোন জিনিস আপনাকে সবচেয়ে বেশি স্বস্তি দিচ্ছে?",
+      "ta": "நம்பிக்கையும் குடும்ப மரபுகளும் சிகிச்சையின் போது உண்மையான ஆறுதலாக இருக்கலாம். மூலிகை அல்லது வீட்டு வைத்தியங்களையும் பயன்படுத்தினால், உங்கள் சிகிச்சைக் குழுவிடம் தெரிவிப்பது நல்லது; அவர்கள் அதை உங்கள் சிகிச்சையுடன் சரிபார்க்க முடியும். சமீபத்தில் உங்களுக்கு அதிக ஆறுதல் தந்தது எது?"
+    },
+    "family": {
+      "en": "In many families, illness is carried together, and that can feel both comforting and heavy. Who in your family do you feel you can be most open with right now?",
+      "hi": "कई परिवारों में बीमारी का बोझ सब मिलकर उठाते हैं, जो सहारा भी लगता है और भारी भी। इस समय परिवार में किससे आप सबसे खुलकर बात कर पाते हैं?",
+      "bn": "অনেক পরিবারে অসুস্থতার ভার সবাই মিলে বহন করে, যা ভরসাও দেয় আবার ভারীও লাগে। এই মুহূর্তে পরিবারের কার সঙ্গে আপনি সবচেয়ে খোলাখুলি কথা বলতে পারেন?",
+      "ta": "பல குடும்பங்களில் நோயின் சுமையை எல்லோரும் சேர்ந்து சுமக்கிறார்கள்; அது ஆறுதலாகவும் பாரமாகவும் இருக்கலாம். இப்போது குடும்பத்தில் யாரிடம் நீங்கள் மனம் திறந்து பேச முடிகிறது?"
+    }
+  },
+  "financial_pattern": "\\b(cost\\w*|afford\\w*|money|expens\\w*|bills?|loans?|debt|insurance|ayushman|pm-?jay|scheme|subsid\\w*|financ\\w*|fund(?:s|ing)?|can'?t pay|cannot pay|pay for)\\b"
+}

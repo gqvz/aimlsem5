@@ -1,338 +1,438 @@
-# Sahay — updated system architecture
+# Sahay — architecture
 
-Updated: **12 October 2026**. This document describes the current implementation. Pending integrations are listed separately in section 9.
+Branch `rewrite/backend`, as of 30 October 2026. Describes what the code does now, not the plan (see `REWRITE_PLAN.md` for that).
 
-Sahay is an **Android emotional wellbeing course prototype for adults affected by cancer in India**. It combines a calm native interface, optional recreational activities, multilingual support, a bounded multi-agent assistant, and patient-controlled communication with a fictional care team.
+Sahay is an emotional-wellbeing companion for adults affected by cancer in India. It has a native Android client, a small web client, and a Python backend with a safety-first chat pipeline, patient-consented visit-brief sharing, and patient–clinician care messaging. Languages: `en`, `hi`, `bn`, `ta`.
 
 ## 1. System overview
 
 ```mermaid
-flowchart TB
-    subgraph Android["Android app — Kotlin / Jetpack Compose"]
-        Patient["Patient: Today, Talk, Explore, Care, Settings"]
-        Clinician["Clinician: Review, Messages, Settings"]
-        Admin["Admin: accounts, invitations, audit"]
-        Local["Device: activities, language assets, preferences, encrypted session"]
-        Voice["Voice: device recognition/TTS or API mode"]
+flowchart LR
+    subgraph Clients
+        And["Android app<br/>Kotlin + Compose"]
+        Web["Web client<br/>web/ (vanilla JS)"]
     end
-    subgraph Docker["Local Docker deployment"]
-        API["Python HTTP API — server.py"]
-        Graph["Eight-agent task graph — agents.py"]
-        Accounts["Accounts and consent — sahay/services/accounts.py, shares.py"]
-        Care["Care messages and files — care.py"]
-        Speech["STT/TTS adapters — speech.py"]
-        DB[("SQLite in persistent /data volume")]
-        Tunnel["Private SSH model bridge"]
+
+    subgraph Backend["Backend container (FastAPI, uvicorn)"]
+        MW["ApiGuards middleware<br/>size caps, no-store"]
+        R["Routes + deps<br/>auth, rate limits"]
+        P["Chat pipeline<br/>sahay/domain"]
+        S["Services<br/>accounts, shares, care"]
+        PR["Providers<br/>llm, speech"]
+        DB[("SQLite WAL<br/>/data volume")]
+        C["content/*.json"]
     end
-    Patient --> API
-    Clinician --> API
-    Admin --> API
-    Patient --- Local
-    Voice -->|"API mode"| API
-    API --> Graph
-    API --> Accounts
-    API --> Care
-    API --> Speech
-    Accounts --> DB
-    Care --> DB
-    Graph --> ModelAPI["Configurable Chat Completions endpoint"]
-    ModelAPI --> Zen["Default: OpenCode / space-bunny-free"]
-    ModelAPI -.->|"Optional Gemma configuration"| Tunnel
-    Tunnel -->|"SSH to zeb@10.25.1.1"| Gemma["Remote Docker: Ollama / gemma3:12b"]
-    Speech -.->|"When providers are configured"| Providers["External transcription and speech APIs"]
+
+    LLM["OpenAI-compatible<br/>chat endpoint"]
+    JUDGE["Optional separate<br/>judge model"]
+    SPEECH["STT / TTS APIs"]
+    TUN["model-tunnel<br/>SSH bridge (optional)"]
+    GEM["Remote Ollama<br/>gemma3:12b"]
+
+    And -->|"HTTPS JSON /api/*"| MW
+    Web --> MW
+    MW --> R
+    R -->|"/api/message"| P
+    R --> S
+    R --> PR
+    S --> DB
+    P --> C
+    P --> PR
+    PR --> LLM
+    PR --> JUDGE
+    PR --> SPEECH
+    LLM -.-> TUN -.-> GEM
 ```
 
-| Layer | Current implementation |
-| --- | --- |
-| Main client | Native Kotlin, Jetpack Compose, Material components; Android only |
-| Client state | `SahayViewModel`, Compose observable state, bundled content and Android preferences |
-| Backend | Python standard-library `ThreadingHTTPServer`; JSON HTTP API |
-| Agent orchestration | Custom request-scoped graph with eight specialist agents; no LangGraph dependency |
-| Model | Shared selected model through an OpenAI-compatible endpoint; default `space-bunny-free`, optional `gemma3:12b` |
-| Backend storage | SQLite: accounts, sessions, invitations, approved shares, care conversations/files, audit |
-| Deployment | Backend container with hosted model endpoint; optional SSH bridge for remote Gemma |
-| Languages | English, Hindi, Bengali and Tamil (`en`, `hi`, `bn`, `ta`) |
+| Layer | Implementation |
+|---|---|
+| API | FastAPI app factory in [sahay/api/app.py](sahay/api/app.py); `python server.py` runs uvicorn |
+| Domain | Pure-ish Python in `sahay/domain/`: safety, guard, pipeline, routing, content |
+| Services | Account, share and care logic over SQLAlchemy sessions in `sahay/services/` |
+| Providers | `urllib`-based OpenAI-compatible client and speech adapters in `sahay/providers/` |
+| Storage | SQLite (WAL, FKs on) via SQLAlchemy 2.0; Alembic migrations |
+| Content | Versioned JSON in `content/`, served at `/api/content` |
+| Contract | `contract/openapi.json` snapshot; Android JVM tests consume real backend fixtures |
 
-The earlier web prototype remains served by the backend. The current product UI and activities are in the Android app.
+## 2. Backend layout
 
-## 2. Android application architecture
+```mermaid
+flowchart TB
+    server["server.py<br/>uvicorn entry"] --> app
+    subgraph api["sahay/api"]
+        app["app.py<br/>create_app, ApiGuards, error handlers, static mount"]
+        routes["routes.py<br/>APIRouter /api"]
+        deps["deps.py<br/>current_user(roles), throttle, json_body"]
+    end
+    subgraph services["sahay/services"]
+        accounts["accounts.py"]
+        shares["shares.py"]
+        care["care.py"]
+    end
+    subgraph domain["sahay/domain"]
+        pipeline["pipeline.py"]
+        routing["routing.py"]
+        prompts["prompts.py"]
+        content["content.py"]
+        safety["safety/<br/>rules, normalize"]
+        guard["guard/<br/>claims, similarity, judge"]
+    end
+    subgraph providers["sahay/providers"]
+        llm["llm.py<br/>ModelClient"]
+        speech["speech.py"]
+    end
+    subgraph infra["sahay (core)"]
+        db["db.py"]
+        models["models.py"]
+        security["security.py"]
+        ratelimit["ratelimit.py"]
+        config["config.py"]
+        errors["errors.py"]
+    end
+    engine["engine.py<br/>compat re-exports + respond()"]
 
-### Screens and role routing
+    app --> routes
+    routes --> deps
+    routes --> engine
+    engine --> pipeline
+    routes --> accounts & shares & care & speech
+    deps --> accounts & ratelimit
+    pipeline --> routing & prompts & content & safety & guard & llm
+    guard --> safety
+    guard --> llm
+    accounts & shares & care --> models
+    accounts --> security
+    db --> models
+```
 
-- **Guest/patient:** interactive garden arrival → Today; bottom destinations are Today, Talk, Explore, Care and Settings. Today starts with one optional breathing invitation, followed by an expandable mood/energy check-in and activity plan.
-- **Clinician:** sign-in/session restoration → review queue; separate Review, Messages and Settings destinations. Detail screens display patient-selected briefs and questions, with manual review status and notes.
-- **Admin:** account list, clinician invitations, deactivation and audit metadata. Admin accounts have no care-message/file access through the care API.
-- **Settings:** full screen for identity, display name, password, sign-out, language, larger text, reduced motion, volume, speech provider, local saving, clearing local data, support, connection settings and the latest agent handoffs.
+`engine.py` is a thin compatibility surface: `respond()` picks a model client (`model_for_request`) and calls `pipeline.run`. New code imports from `sahay.*`.
 
-Saved sessions are checked through `/api/me` before restoring the matching role home. Invalid sessions return to account entry; connection failures show retry/sign-out controls. Back and Help return to their originating screen.
+### Request lifecycle
 
-### Client layers
+```mermaid
+sequenceDiagram
+    participant Cl as Client
+    participant G as ApiGuards
+    participant Rt as Route
+    participant D as Deps
+    participant Sv as Service
+    participant Db as SQLite
+    Cl->>G: POST /api/... (Bearer token)
+    G->>G: content-length 1..16 KB (15 MB for /care, /speech)
+    G->>Rt: forward
+    Rt->>D: throttle(bucket) by client IP
+    Rt->>D: current_user(roles)
+    D->>Db: token_hash join sessions/users (unexpired, active)
+    D-->>Rt: User or 401/403
+    Rt->>Sv: call with Session (one txn per request)
+    Sv->>Db: read/write, audit record
+    Rt-->>G: JSON (commit before response)
+    G-->>Cl: + Cache-Control: no-store, nosniff
+```
 
-| Responsibility | Source |
-| --- | --- |
-| Permissions, speech, document picker, file opening/export | `MainActivity.kt` |
-| Navigation, observable state, HTTP requests, sessions, client fallback | `SahayViewModel.kt` |
-| Patient shell, chat and core screens | `SahayUi.kt` |
-| Arrival, Today, Explore and activities | `WellbeingUi.kt`, `WellbeingCopy.kt`, `AmbientAudio.kt` |
-| Accounts, clinician/admin, care and settings | `AccountUi.kt`, `CareUi.kt`, `SettingsUi.kt` |
-| Shared spacing, app bars, page frames and bottom actions | `UiPrimitives.kt` |
-| Bundled multilingual copy, sources and fixed replies | `Content.kt`, `assets/content.json`, `assets/i18n.json` |
-| Session encryption | `SessionStore.kt` |
+Errors use one envelope, `{"error": "..."}` (plus `retry_after` on 429). `ApiError`, validation, `ValueError`, JSON errors and unexpected exceptions all map to it; unexpected errors return a fixed message pointing to the Help panel, never the exception text.
 
-Activity controls and the care composer use persistent bottom action areas above the keyboard and system insets. Scrollable content is separate. Shared controls use 48dp icon targets, 56dp primary actions and consistent spacing. See [UI_REFINEMENT.md](UI_REFINEMENT.md) for design decisions and rendered checks.
+## 3. The chat pipeline
 
-### Local activities
+`POST /api/message` → `engine.respond` → `pipeline.run`. One turn is: local safety → understand → safety gate → route → draft → localise → guard. Every model call shares one deadline (`SAHAY_TURN_DEADLINE`, default 45 s) via `BoundedModel`, so a slow provider degrades to curated copy instead of hanging.
 
-Nine activities run on the device without requiring the LLM:
-
-1. Gentle breathing, with start/pause and optional stopping.
-2. Five-senses grounding with step-by-step progression.
-3. Guided quiet/meditation moment.
-4. Locally generated rain, white noise and brown noise.
-5. Garden matching pairs.
-6. Colour hunt.
-7. Drawing canvas with undo and PNG export.
-8. Private journal with optional local saving.
-9. Explicitly fictional encouragement notes.
-
-The Activity agent recommends catalogue entries; it does not generate executable games or exercise instructions. Timers/audio respect leaving the activity and backgrounding. There are no wellbeing streaks or performance scores.
-
-## 3. Multi-agent backend
-
-### Agent responsibilities and authority
-
-Eight agents share the selected model and a request-scoped state. Each has separate instructions and code-controlled operations. Safety is deterministic; the other agents combine model calls with fixed validation or fallback behavior.
-
-| Agent | Responsibility | Available operations |
-| --- | --- | --- |
-| Language | English working translation, initial model risk classification, reply translation | Translate/classify input; translate output |
-| Safety | Combine original-text rules, translated-text rules and model risk; stop unsafe routes | Risk gate; fixed help, clarification, medical-boundary or human-connection reply |
-| Supervisor | Select a permitted specialist action | Delegate to `reflect`, `coping`, `info`, `questions`, `activities` or `brief` |
-| Emotional support | Acknowledge a concern and ask a relevant question | Draft a short reflective reply |
-| Knowledge | Explain an available curated source summary | Lookup one of four cards; draft a cited explanation |
-| Activity | Select an optional plan suited to stated energy | Choose 1–3 catalogue IDs, checked by code |
-| Visit preparation | Prepare care-visit questions or a first-person brief | Produce an editable draft from supplied context |
-| Review | Check generated output for fidelity and allowed content | Approve or veto; fixed fallback on veto/failure |
-
-Operations are Python methods controlled by the graph. The model cannot execute arbitrary tools, read the database, send care messages/files, change accounts or contact a clinician. A turn executes a bounded sequence of handoffs, without an autonomous background loop.
-
-### Turn execution
+Invariants, from the module docstrings:
+- The model may only **raise** risk (`more_cautious`) and only choose among fixed tools (`reflect, coping, info, questions, activities, brief`).
+- Nothing the model writes reaches the user unless the guard approves it. The guard never edits text; on failure the pipeline substitutes curated copy.
 
 ```mermaid
 flowchart TD
-    Input["Text or patient-corrected transcript"] --> Pre["Local risk check before model calls"]
-    Pre -->|"Explicit urgent input"| Fixed["Fixed localized help reply"]
-    Pre -->|"Otherwise"| Lang["Language: translate and classify"]
-    Lang --> Safety["Safety: combine risks and apply boundaries"]
-    Safety -->|"Crisis or urgent medical"| Fixed
-    Safety -->|"Concerning or treatment request"| Boundary["Fixed clarification, connection or medical-boundary reply"]
-    Safety -->|"Ordinary"| Sup["Supervisor: choose action"]
-    Sup --> Reflect["Emotional support"]
-    Sup --> Info["Knowledge: curated source"]
-    Sup --> Visit["Visit preparation: questions or brief"]
-    Sup --> Plan["Activity: catalogue plan"]
-    Sup --> Coping["Fixed grounding script"]
-    Reflect --> Translate["Language: translate reply if needed"]
-    Info --> Translate
-    Visit --> Translate
-    Translate --> Review["Review model + deterministic output checks"]
-    Review -->|"Approved"| Response["Reply, source, suggestions and public trace"]
-    Review -->|"Veto or failure"| Fallback["Fixed localized fallback"]
-    Plan --> Validate["Validate IDs, uniqueness, energy and constraints"]
-    Validate --> Response
-    Coping --> Response
-    Fixed --> Response
-    Boundary --> Response
-    Fallback --> Response
+    In["text, language, action?, history, energy"] --> Local["assess(original)<br/>deterministic rules"]
+    Local -->|"crisis / urgent_medical"| Fixed1["Fixed copy from FALLBACK<br/>mode = fixed, no model call"]
+    Local -->|otherwise| U["understand<br/>1 LLM call: translate + risk + suggested tool"]
+    U -->|"provider fails"| Cautious["risk = concerning, issue flag<br/>no live drafting"]
+    U --> Gate
+    Cautious --> Gate
+    Gate{"safety_gate<br/>risk = more_cautious(original, english, model)"}
+    Gate -->|"crisis / urgent_medical"| Fixed2["help / medical copy"]
+    Gate -->|"medical request"| Fixed3["medical_boundary copy"]
+    Gate -->|"concerning + dependency"| Fixed4["human_connection copy"]
+    Gate -->|concerning| Fixed5["clarify copy"]
+    Gate -->|ordinary| Route["route<br/>user action → rules → model hint"]
+    Route -->|activities| Plan["activity_plan<br/>LLM picks IDs from catalogue, validated<br/>else energy-based default"]
+    Route -->|coping| Ground["fixed grounding script"]
+    Route -->|"info, no card"| NoSrc["info_unavailable copy"]
+    Route -->|"reflect / info / questions / brief"| Draft
+    Draft["draft (LLM)<br/>SUPPORT / KNOWLEDGE+card / QUESTIONS / BRIEF"] --> Loc["localise (LLM)<br/>only when lang != en"]
+    Loc --> Ver{"verify (guard)"}
+    Ver -->|approved| Live["mode = live"]
+    Ver -->|blocked or error| FB["mode = fallback<br/>curated reply"]
+    Route -.->|"no model / issue flag"| Demo["mode = demo<br/>curated reply"]
 ```
 
-The graph does **not** call all eight agents on every turn:
+Ordinary live turn cost: understand (1) + draft (1) + translate (1, non-English) + judge (1).
 
-- Reflection: Language → Safety → Supervisor → Emotional support → output translation if needed → Review.
-- Activity plan: Language → Safety → Supervisor → Activity → catalogue validation. Its introduction uses fixed localized copy; this path skips the generative Review step.
-- Brief: Language → Safety → Supervisor → Visit preparation → output translation if needed → Review → patient editing. Sharing is a separate authenticated action.
-- Explicit urgent wording recognized by local rules: immediate fixed Safety response, skipping model calls.
+Response shape: `route, action, text, card, mode (fixed|live|fallback|demo), translation, agent_trace[], orchestration, + optional activity_plan / suggestions / visit_brief / provider_error`. `agent_trace` lists named steps (Language, Safety, Supervisor, Knowledge, Emotional support, Activity, Visit preparation, Guard, Review) with `mode` of `llm`, `fixed` or `fallback`; the app shows these as "agent handoffs". They are labels over one pipeline, not separate agents.
 
-### State, context and response contract
+### Safety layer — `sahay/domain/safety`
 
-The actual `State` holds request data, model client, original text, language, English translation, risk, action, provider issue flag, public trace and task-specific extras. It exists only for the request.
+- `normalize.py`: lowercase, strip invisible chars and apostrophes, punctuation to spaces, collapse repeats, and repair typos against a small vocabulary (`kil` → `kill`).
+- `rules.py`: regex groups for `CRISIS`, `MEDICAL` (urgent), `DEPENDENCY` and `MEDICAL_REQUEST`, in English, romanised Hindi, Devanagari, Bengali and Tamil (one script per pattern, enforced by tests).
+- `assess(text)` runs on raw, normalised and typo-repaired views and returns `RiskAssessment(risk, medical_request, dependency, rules)`. Rule-group names only; never the user's text.
+- Risk order: `ordinary < concerning < urgent_medical < crisis`.
 
-Android normally supplies the last four displayed messages as recent conversation context. Visit preparation also includes the patient's concerns/questions. There is no backend longitudinal patient-memory store or inferred emotional profile.
+### Output guard — `sahay/domain/guard`
 
-`POST /api/message` returns:
+Every model-written string passes three layers, cheapest first; all must pass.
 
-```json
-{
-  "route": "ordinary",
-  "action": "reflect",
-  "text": "...",
-  "card": null,
-  "mode": "live",
-  "translation": "English working text",
-  "agent_trace": [{"agent": "Supervisor", "tool": "delegate", "outcome": "reflect", "mode": "llm"}],
-  "orchestration": "sahay-agent-graph-v1"
-}
+```mermaid
+flowchart LR
+    T["model reply"] --> L1
+    L1["1. deterministic<br/>length, forbidden claims (per lang + en),<br/>medication directive, ?-count,<br/>missing source, phone numbers (112, 14416 only),<br/>dose-like quantities, URLs not on card"]
+    L1 --> L2["2. similarity<br/>char n-gram match vs prohibited-claim<br/>exemplars, threshold 0.65"]
+    L2 --> L3["3. judge<br/>independent model, reply as quoted data,<br/>fails closed, optional English draft<br/>for meaning-drift check"]
+    L3 -->|allow| OK["approved"]
+    L1 -->|fail| X["blocked"]
+    L2 -->|fail| X
+    L3 -->|block / unavailable / unparsable| X
 ```
 
-Task-specific fields include `activity_plan`, `visit_brief` and launchable `suggestions`. The trace exposes tool decisions rather than hidden reasoning; Android shows the latest chat/plan trace under AI activity.
+`judge_client()` uses `SAHAY_GUARD_LLM_*` if set (trace says `separate`), else the main model (`same_model`). For translated replies the English draft is also checked, since it must be clean before translation.
 
-`mode` distinguishes model-approved output (`live`), fixed routing (`fixed`), deterministic demo behavior (`demo`) and failure/veto fallback (`fallback`). Activity plans can be `live` when the model selects valid IDs, even though their introductory text is fixed.
+### Content — `content/*.json`
 
-Knowledge uses four bundled source cards, without a vector database or open-web RAG. Unknown topics return fixed unavailable-information text. Rule checks and model review do not guarantee correct interpretation of novel input.
+`sources.json` (curated NCI cards + translated summaries), `fallback.json` (fixed replies per language and situation), `activities.json` (catalogue with energy/minutes), `intros.json`. `content.py` loads them at import and computes `CONTENT_VERSION` (hash) so clients can detect stale bundled copies. `GET /api/content` returns the bundle; Android ships `assets/content.json` as the offline copy.
 
-## 4. Indian languages and speech
+`india.json` holds Indian-context handling: keyword themes (family, faith/traditional remedies, care journey away from home, fasts/festivals) whose guidance is appended to the support prompt, per-language curated check-ins used as the offline reply for those themes (exposed as `checkins` in the bundle), and the cost-worry pattern that routes to the `financial` card in `sources.json` (PM-JAY, RAN, PMNRF; helpline 14555 is on the guard's number allowlist). The guard blocks remedies presented as cures or substitutes for treatment and fasting directives. Hindi, Bengali and Tamil copy and the scheme details need native-speaker and social-worker review.
 
-### Language flow
+## 4. Model provider handling — `providers/llm.py`
 
-The selected language is saved in device preferences and changed in Settings. Core UI/help/account controls, activity labels and principal exercise guidance are bundled in English, Hindi, Bengali and Tamil. Secondary explanations and clinician/admin interfaces remain English-first.
-
-For a live ordinary turn, the selected model creates an English working translation, a specialist drafts the answer, and Language translates it to the selected language. Safety checks both original and translated input. Review compares the final answer against the draft, including urgency and negation. AI translation uses the shared model; there is no separate external translator service.
-
-Mixed-language input is accepted as text, but code switching, accents and translation accuracy still need broader bilingual evaluation. The implementation does not retain word-level language spans, ASR confidence or a clinical distress score.
-
-### Speech flow
-
-```text
-Microphone
-  ├─ Device mode → Android recognition service
-  └─ API mode → AAC/M4A clip → backend STT adapter → configured provider
-       ↓
-Editable transcript → explicit Send → agent graph → readable reply
-       ↓
-Optional playback → Android TTS or backend TTS adapter → MP3
+```mermaid
+flowchart TD
+    Req["request.model_config?"] -->|none| Def["ModelClient() from LLM_API_URL / LLM_MODEL / LLM_API_KEY"]
+    Req -->|present| V["validate: http(s), host, no creds/query/fragment,<br/>model name length"]
+    V --> A{"netloc in allowlist?<br/>LLM_API_URL host + SAHAY_MODEL_ALLOWLIST"}
+    A -->|no| Rej["ValueError → 400 (SSRF guard)"]
+    A -->|yes| K{"same URL as default?"}
+    K -->|yes| WithKey["use configured key"]
+    K -->|no| NoKey["no key forwarded"]
 ```
 
-- Device recognition/TTS depend on installed Android services and available language voices.
-- API mode is wired, but real STT/TTS providers have not been supplied.
-- Transcription accepts up to 8 MB of audio and forwards an OpenAI-compatible multipart request with model, language and file.
-- Synthesis forwards text/model/voice and returns MP3. It relies on the provider understanding the input script; a provider requiring an explicit language parameter needs an adapter adjustment.
-- API recording clips are deleted after completion/cancellation. Transcripts are shown for correction before sending. Denied permissions and missing providers retain text input/readable replies.
-- Provider URLs/credentials stay on the backend. Device speech may use its installed service's network processing; it is not guaranteed to be offline.
+- Redirects are refused (`_NoModelRedirect`), request and provider error bodies are never logged or echoed (only HTTP status plus a fixed hint).
+- `public_model_configuration()` strips credentials and query from the URL for `/api/health`.
+- No `LLM_API_URL`/`LLM_MODEL` → `ready=False` → the pipeline runs in `demo` mode on curated copy.
+- Speech (`speech.py`): OpenAI-compatible STT (`m4a` in) and TTS (`mp3` out) via `STT_API_URL` / `TTS_API_URL`; 503 when unconfigured, so the app falls back to device speech.
 
-## 5. Clinician handoff and two-way care communication
+## 5. Accounts, sharing and care
 
-### Patient-approved visit brief
+### Roles and access
 
-1. Patient writes concerns/questions or requests an AI draft.
-2. Patient edits the draft, selects questions, chooses a clinician and explicitly confirms consent.
-3. Backend stores a snapshot in `shares` and records an audit event.
-4. The selected clinician sees it in the review queue and can mark `in_review` or `reviewed`, with a note.
-5. Patient can revoke the share. Subsequent clinician API reads are blocked and it leaves the queue.
-
-Only selected brief/questions/note are shared. Ordinary chat and journal content are not automatically copied into this workflow. Revocation blocks future app access; it cannot erase information already viewed or copied by a recipient.
-
-### Care messages, files and requests
-
-Care communication is independent of visit-brief sharing:
-
-- One thread joins one patient and one clinician. Either can open it from the synthetic opposite-role directory.
-- Both can send notes/files without waiting for a request.
-- Clinicians create `file_request` messages. Patients attach a reply using `request_id`; storing the reply and fulfilling the request occur in the same database transaction.
-- Accepted formats: PDF, PNG, JPEG and UTF-8 text; up to two attachments per API message, each at most 5 MB. Android currently holds one pending attachment.
-- Files are SQLite BLOBs, downloaded through authenticated participant checks and opened/exported through Android file APIs.
-- Authorization checks session, role, thread membership and active partner status. Sending/downloading produces audit events.
-
-Files are **not** automatically interpreted by the LLM. Care uses manual fetch/refresh, without push notifications or emergency monitoring. Brief revocation does not revoke independently sent care files; there is no unsend. The course directory is not a verified hospital patient-assignment system.
-
-## 6. Accounts, storage and access
-
-### Bookkeeping
-
-Patients can register; clinicians accept admin-created invitations or use seeded fictional accounts. Invitations are returned to the admin for manual sharing, without automatic email delivery. Admins are provisioned through demo seeding. Sessions expire after 12 hours. Password changes invalidate all account sessions; deactivation also invalidates sessions.
-
-Passwords use salted `scrypt`; bearer tokens and invitation codes are hashed in SQLite. Android stores its session bundle with AES-GCM using Android Keystore and checks the server session on launch. Backend handlers enforce role authorization independently of navigation.
-
-### Persistence
-
-| Data | Location and retention |
-| --- | --- |
-| User profile/role/active status | SQLite `users` |
-| Hashed sessions and expiring invitations | SQLite `sessions`, `invitations` |
-| Shared brief, review status/note and revocation | SQLite `shares`; submission/status events in `audit` |
-| Care messages, request status, attachments | SQLite `care_threads`, `care_messages`, `care_files` |
-| Account/share/care event metadata | SQLite `audit`; admin API returns latest 100 entries |
-| Ordinary AI chat, visit questions, journal | Device memory by default; opt-in device preferences for local saving |
-| Language, accessibility, audio, connection preferences | Android preferences |
-| Unsent care draft and pending attachment | ViewModel memory; retained for the same thread during the session, cleared on thread change/sign-out/local clear |
-| Agent state/trace | Request memory and latest client state; no durable backend trace store |
-
-Only the session bundle is encrypted by `SessionStore`; opt-in saved conversation/question/journal preferences are not separately encrypted by the app. Sign-out/local clear remove local sensitive content, without deleting previously submitted backend shares or care messages.
-
-Message and speech endpoints support guest use and currently do not require account tokens. Account, share, clinician/admin and care operations require authorization. The server does not durably store ordinary AI transcripts; configured model/speech providers process supplied text/audio under their own behavior.
-
-## 7. API boundaries
-
-| Area | Routes |
-| --- | --- |
-| Assistant/content | `POST /api/message`, `POST /api/model/test`, `GET /api/cards`, `GET /api/health` |
-| Authentication | `POST /api/auth/{register,login,accept-invite,logout}` |
-| Account | `GET /api/me`; `POST /api/me/profile`, `/api/me/password` |
-| Patient sharing | `GET /api/clinicians`; `POST /api/shares`; `GET /api/shares/mine`; `DELETE /api/shares/{id}` |
-| Clinician review | `GET /api/clinician/queue`, `/api/clinician/shares/{id}`; `POST /api/clinician/shares/{id}/review` |
-| Care | `GET /api/care/contacts`; `GET/POST /api/care/threads`; `GET/POST /api/care/threads/{id}/messages`; `GET /api/care/files/{id}` |
-| Administration | `POST /api/admin/invitations`; `GET /api/admin/users`, `/api/admin/audit`; `POST /api/admin/users/{id}/deactivate` |
-| Speech | `GET /api/speech/status`; `POST /api/speech/transcribe`, `/api/speech/synthesize` |
-
-Android **Settings → AI model** saves a per-device endpoint URL and model name. `model_config: {url, model}` selects that client for the whole graph without changing the backend default or another device. **Save and test model** calls `/api/model/test` for a real short request. Credentials remain on the backend, are attached only to its exact configured endpoint, and are not forwarded on redirects. The current requested OpenCode free-tier endpoint returns HTTP 403 outside OpenCode; live access is pending provider authorization.
-
-`/api/health` exposes the credential-free default URL/name and reports whether they are configured; its `live` flag does not prove current model connectivity. Speech status likewise reports configuration presence.
-
-## 8. Deployment and failure handling
-
-### Course deployment
-
-- **Backend:** `Dockerfile`, Python 3.12, nonroot UID 10001, health check, 384 MB memory cap, 1 CPU; persistent `sahay-data` volume at `/data`.
-- **Host access:** `127.0.0.1:8000`; emulator reaches it at `10.0.2.2:8000`.
-- **Model:** optional `compose.gemma.yaml` runs a 64 MB SSH bridge, forwarding private Docker-network traffic to the authorized host's loopback Ollama service. The recorded demo uses existing remote container `resume-ollama` and `gemma3:12b`.
-- **SSH:** bridge mounts the current SSH agent socket and trusted `known_hosts`, without copying a private key. A restarted agent needs its socket configuration refreshed. No model port is published to the host/LAN by the bridge.
-- **Configuration:** `LLM_API_URL`, `LLM_MODEL`, optional `LLM_API_KEY`, `LLM_TIMEOUT`; speech uses `STT_*` and `TTS_*` variables. Secrets belong in ignored `.env`, not source or Android assets. The current default is `https://opencode.ai/zen/v1/chat/completions` / `space-bunny-free`; the optional Gemma Compose file explicitly overrides it.
-
-```bash
-# Backend without the optional model bridge:
-docker compose up -d --build
-
-# Model-enabled setup, from a terminal with the SSH key loaded:
-export SAHAY_SSH_AGENT="$SSH_AUTH_SOCK"
-docker compose -f compose.yaml -f compose.gemma.yaml up -d --build
+```mermaid
+flowchart LR
+    Guest["Guest<br/>no account"] -->|"/message, /health, /cards,<br/>/content, /speech/*"| Pub["Public routes<br/>IP rate-limited"]
+    Patient -->|"/me, /clinicians, /shares/*"| Pat["Patient routes"]
+    Patient -->|"/care/*"| Care["Care routes"]
+    Clinician -->|"/clinician/*"| Cli["Clinician routes"]
+    Clinician -->|"/care/*"| Care
+    Admin -->|"/admin/*"| Adm["Admin routes"]
+    Admin -.->|"no access"| Care
 ```
 
-Unset live-model settings to select deterministic demo behavior. Remote inference keeps large model-memory requirements off the development PC. Build Android with the emulator closed after the earlier OOM; see [android/README.md](android/README.md) for the constrained modern-phone emulator setup.
+Routes declare access with `Depends(current_user("patient"))` etc. (`Patient`, `Clinician`, `Admin`, `Member`, `Anyone` in `routes.py`). There is no per-handler role check to forget.
 
-### Failure behavior
+### Auth
 
-- Explicit urgent input recognized by local rules gets a fixed reply before slow model calls.
-- Missing model configuration uses deterministic backend replies. Invalid output, provider failure or review veto selects a fixed fallback.
-- Backend disconnection leaves local activities available and uses bundled client chat fallbacks; care/account submissions require a successful server response.
-- Missing speech configuration returns 503 with readable text retained.
-- Model timeouts are per call; several sequential calls can exceed the Android chat timeout. A whole-turn deadline/cancellation mechanism is not implemented.
-- This deployment uses local HTTP. Hosted TLS and production operations are outside the current course setup.
+- Patients self-register (`/auth/register`); clinicians are created by admin invitation (`/admin/invitations` → `/auth/accept-invite`); admin accounts come from `python -m sahay.cli seed-demo`.
+- Passwords: scrypt (n=2^14), constant-time compare. Session tokens: 32-byte URL-safe random, stored only as SHA-256; 12 h expiry; expired sessions pruned on each new login.
+- Login failures are throttled per IP + contact (8 per 15 min); success resets the counter. Other buckets: message 30/min, model_test 5/min, speech 20/min, register 10/h. The limiter is in-memory and per-process.
+- Every share, review, care message, invite and deactivation writes an `audit` row.
 
-## 9. Implemented versus pending
+### Data model
 
-| Implemented | Pending or outside current scope |
-| --- | --- |
-| Native patient/clinician/admin flows, full Settings, role restoration | Real identity verification, hospital assignments, EHR integration |
-| Eight-agent delegation, public handoffs, fixed safety routes, output review | Clinical efficacy validation and broader independent safety evaluation |
-| Four-language text support and AI translation | Bilingual review of all copy, wider code-switching/accent tests |
-| Device speech hooks and HTTP STT/TTS adapters | Real speech API credentials, voice quality and microphone/device validation |
-| Nine local activities and constrained AI recommendations | Live peer community/moderation; current notes are fictional |
-| Two-way files, clinician requests, approved briefs and audit | Malware scanning, unsend, push messaging, automatic file interpretation |
-| Persistent Docker backend and private model bridge | Production hosting, automated backups, rate limits, whole-turn cancellation |
+```mermaid
+erDiagram
+    users ||--o{ sessions : has
+    users ||--o{ invitations : "created_by"
+    users ||--o{ shares : "patient_id"
+    users ||--o{ shares : "clinician_id"
+    users ||--o{ care_threads : "patient_id"
+    users ||--o{ care_threads : "clinician_id"
+    care_threads ||--o{ care_messages : has
+    care_messages ||--o{ care_files : attaches
+    users ||--o{ audit : "actor_id"
 
-## 10. Recorded validation
+    users {
+        string id PK
+        string contact UK
+        string password_hash
+        string role "patient|clinician|admin"
+        string language
+        int active
+    }
+    sessions {
+        string token_hash PK
+        string expires_at
+    }
+    invitations {
+        string code_hash PK
+        string role
+        string used_at
+    }
+    shares {
+        string id PK
+        text summary
+        text questions_json
+        string status "new|reviewed..."
+        text clinician_note
+        string revoked_at
+    }
+    care_threads {
+        string id PK
+        string patient_id "unique with clinician_id"
+    }
+    care_messages {
+        string id PK
+        string kind "note|file_request"
+        string request_id
+        string fulfilled_at
+    }
+    care_files {
+        string id PK
+        blob bytes
+        string mime
+    }
+    audit {
+        int id PK
+        string event
+        string object_type
+    }
+```
 
-These are existing implementation records, not tests rerun for this documentation update:
+### Visit-brief sharing
 
-- [OVERHAUL_VALIDATION.md](OVERHAUL_VALIDATION.md): 31 Python tests; Docker account/file/request flows and persistence; **22/22 authored fictional Gemma cases** passing the recorded checks. The model artifact is [evals/overhaul_gemma_results.json](evals/overhaul_gemma_results.json), recorded 4 October 2026 UTC / 5 October IST. Earlier routing failures and focused rechecks remain in `evals/`.
-- [UI_REFINEMENT.md](UI_REFINEMENT.md): successful APK build, installed emulator checks, role/session restoration, keyboard/composer behavior, local activities and compact Tamil navigation with larger text.
-- Speech provider tests use mocks; these results do not establish actual recognition/playback quality or clinical performance.
+```mermaid
+sequenceDiagram
+    participant P as Patient app
+    participant API
+    participant C as Clinician app
+    P->>API: POST /message {action: brief|questions}
+    API-->>P: editable draft (visit_brief / suggestions)
+    P->>P: review and edit locally
+    P->>API: POST /shares {clinician_id, summary, questions, note, consent: true}
+    API->>API: 400 unless consent is true, validate clinician active
+    C->>API: GET /clinician/queue
+    C->>API: GET /clinician/shares/{id}
+    C->>API: POST /clinician/shares/{id}/review {status, note}
+    P->>API: DELETE /shares/{id}  (revoke, clinician loses access)
+```
 
-### Relationship to the supplied architecture
+Nothing is shared until the patient explicitly consents to a specific clinician.
 
-The original diagram's supervisor, specialist support, safety, context and clinician-review ideas remain. They are implemented as a bounded request graph, short client-supplied context and explicit patient-approved submissions. Passive clinical monitoring, vitals ingestion, autonomous treatment, an EHR and a vector retrieval service are not implemented.
+### Care conversations
 
-Original project resources remain in [resources/](resources/): the supplied clinical escalation diagram, MindfulAgents material, agentic psychiatry perspective, oncology chatbot review and India IGAP report. They informed the earlier architecture review; this update is grounded in the current source and recorded validation.
+One thread per patient–clinician pair (unique constraint). Messages are `note` or `file_request` (clinician only). Up to two files per message, up to 15 MB request body, stored as blobs with magic-byte checks; a patient can fulfil an open request by posting a file with `request_id`, which sets `fulfilled_at`. Only thread members can read messages or download files.
 
-### Model selection update - 12 October 2026
+## 6. Android client
 
-The Android model fields apply to conversations, translation, plans and briefs. Provider errors are returned separately from fallback content and shown in Settings/the app. Direct OpenCode testing returned HTTP 403 (standalone free-tier access restricted); successful Space Bunny responses have not been validated. Earlier Gemma results above remain historical evidence for that model. The exported architecture PDF is the 5 October snapshot.
+Single-activity Kotlin / Jetpack Compose app, package `org.sahay.app`.
+
+```mermaid
+flowchart TB
+    subgraph UI["Compose UI"]
+        Main["MainActivity<br/>permissions, STT/TTS, file picker"]
+        SahayUi["SahayUi<br/>shell, chat, core screens"]
+        Well["WellbeingUi / WellbeingCopy / AmbientAudio<br/>arrival, Today, Explore, activities"]
+        Acc["AccountUi / CareUi / SettingsUi"]
+        Prim["UiPrimitives<br/>shared frames and bars"]
+    end
+    VM["SahayViewModel<br/>navigation (Screen enum), state, orchestration"]
+    subgraph Data["org.sahay.app.data"]
+        Repo["Repositories<br/>Chat, Auth, Share, Care, Admin"]
+        Api["ApiClient<br/>typed calls, ApiError"]
+        Tr["HttpTransport<br/>UrlConnectionTransport"]
+        Models["Models.kt<br/>User, Share, Reply, CareMessage..."]
+    end
+    Store["SessionStore<br/>encrypted session"]
+    Content["Content.kt<br/>assets/content.json + i18n.json"]
+
+    Main --> SahayUi
+    SahayUi --> VM
+    Well --> VM
+    Acc --> VM
+    VM --> Repo --> Api --> Tr
+    Repo --> Models
+    VM --> Store
+    VM --> Content
+    Tr -->|HTTPS| Backend[(Backend)]
+```
+
+- **Transport seam:** `HttpTransport` is the only code touching the network, so `ApiClient` and repositories run in plain JVM tests with a fake transport. `ApiError(status, message, retryAfterSeconds)` has `isOffline` (status 0), `isUnauthorised`, `isRateLimited`.
+- **Contract tests:** `ContractTest` and `ApiClientTest` parse JSON fixtures under `android/app/src/test/resources/contract/`, generated from the real backend by `tools/export_contract_fixtures.py`. CI fails if they drift.
+- **Role routing:** saved session → `/api/me` → role home (patient: Today/Talk/Explore/Care/Settings; clinician: Review/Messages/Settings; admin: accounts, invitations, audit). Invalid session returns to account entry; network failure offers retry/sign-out.
+- **Offline behaviour:** activities, language assets and fixed replies are bundled; the app can fall back client-side when the server is unreachable.
+- **Known debt:** `SahayViewModel` is ~900 lines and owns navigation, auth, care, admin, speech and settings. The data layer is already split out; the view model has not been.
+
+## 7. Web client
+
+`web/` (`index.html`, `app.js`, `i18n.js`, `styles.css`, Noto fonts for the four scripts) is served by FastAPI's `StaticFiles` at `/`. It is a second client of the same API with local history and settings in `localStorage`. The Android app is the primary product UI.
+
+## 8. Deployment
+
+```mermaid
+flowchart LR
+    subgraph Host
+        subgraph compose["docker compose"]
+            BE["backend<br/>python:3.12-slim, uid 10001<br/>127.0.0.1:8000<br/>384 MB, 1 CPU"]
+            V[("sahay-data volume<br/>/data/sahay.sqlite3")]
+            TUN["model-tunnel<br/>(compose.gemma.yaml / compose.kratos.yaml)"]
+        end
+    end
+    BE --- V
+    BE -->|"default: LLM_API_URL"| Hosted["Hosted chat endpoint"]
+    BE -.->|"optional override"| TUN
+    TUN -->|"SSH -L 11434 (agent or mux socket)"| Remote["zeb@10.25.1.1<br/>Ollama gemma3:12b"]
+```
+
+- `init_db()` runs on app startup: fresh DBs get `alembic upgrade head`; legacy DBs (have `users`, no `alembic_version`) are filled in with `create_all` and stamped, never altered.
+- Operator CLI: `python -m sahay.cli seed-demo | migrate | openapi`.
+- The tunnel variants publish no model port; `compose.gemma.yaml` uses an SSH agent socket, `compose.kratos.yaml` reuses an existing SSH mux with `socat`.
+- Behind a reverse proxy, set `SAHAY_TRUST_PROXY=1` so rate limits use `X-Forwarded-For`.
+
+### Configuration
+
+| Variable | Purpose |
+|---|---|
+| `LLM_API_URL`, `LLM_MODEL`, `LLM_API_KEY`, `LLM_TIMEOUT` | Main chat model; unset = demo mode |
+| `SAHAY_TURN_DEADLINE` | Per-turn budget across all model calls (default 45 s) |
+| `SAHAY_GUARD_LLM_API_URL/_MODEL/_API_KEY` | Separate judge model (recommended) |
+| `SAHAY_MODEL_ALLOWLIST` | Extra endpoints a device may select |
+| `STT_API_URL/_KEY/_MODEL`, `TTS_API_URL/_KEY/_MODEL/_VOICE` | Speech adapters |
+| `SAHAY_DB_PATH`, `SAHAY_HOST`, `SAHAY_PORT`, `SAHAY_TRUST_PROXY` | Server |
+
+## 9. Testing and CI
+
+| Area | Tests |
+|---|---|
+| Safety | `test_safety_corpus.py` over `tests/data/safety_corpus.json` (labelled multilingual cases) |
+| Guard | `test_guard.py` (deterministic, similarity calibration with a benign set, judge), `test_output_filter.py` |
+| Pipeline | `test_pipeline.py`, `test_engine.py`, `test_agents.py` |
+| API | `test_api_contract.py`, `test_accounts_api.py`, `test_care_api.py`, `test_speech.py`, `test_model_configuration.py` |
+| Content | `test_content.py` |
+| Contract | `test_openapi_contract.py` vs `contract/openapi.json` |
+| Android | JVM tests `ApiClientTest`, `ContractTest` |
+
+CI (`.github/workflows/ci.yml`): `ruff check` → `pytest` → OpenAPI snapshot diff → Android fixture diff → `./gradlew :app:testDebugUnitTest`.
+
+## 10. Design decisions worth keeping
+
+1. **Deterministic safety first.** Explicit crisis/urgent text is answered by local rules before any model call, so a slow or down provider cannot delay help.
+2. **Model can only escalate.** Risk is a max over rule and model views; routing is limited to a fixed tool set.
+3. **Fail closed, fixed copy.** Guard failure, provider failure or deadline expiry all land on reviewed copy in the user's language, never on unreviewed text.
+4. **Consent-gated sharing.** Briefs are drafts until the patient picks a clinician and confirms; revocable.
+5. **No content logging.** Request bodies and provider error bodies are not logged or echoed; safety rules report group names only.
+6. **SSRF-closed model selection.** Devices can only pick endpoints the operator allow-listed, and secrets are never forwarded to a different URL.
+7. **Structural authorisation.** Role requirements live in route dependencies; ownership checks are in the service queries.
+
+## 11. Known gaps
+
+- `Dockerfile` still does `COPY ... agents.py ...`, but `agents.py` no longer exists on this branch, so the image build will fail until that name is removed.
+- Rate limiting and login throttling are in-memory and per-process; multi-process deployment needs a shared store.
+- `test_agents.py` and the `AGENTS` list/`orchestration` string keep the older "eight agents" naming, although the implementation is one explicit pipeline.
+- Care files are stored as blobs in SQLite; fine for the prototype, not for volume.
+- `SahayViewModel` is a large single class (see section 6).
+- `web/app.js` carries its own copy of card text and translations, separate from `content/`.

@@ -4,6 +4,7 @@ import json
 import pytest
 
 from engine import FALLBACK, SOURCES
+from sahay.domain.content import CHECKINS
 from sahay.domain.guard import check
 from sahay.domain.guard.exemplars import BANK
 from sahay.domain.guard.judge import parse_verdict
@@ -32,6 +33,9 @@ def test_curated_copy_is_never_blocked():
             assert verdict.allowed, (lang, key, verdict)
     for key, card in SOURCES.items():
         assert check(card["summary"], allowed_urls=URLS).allowed, key
+    for topic, items in CHECKINS.items():
+        for lang, text in items.items():
+            assert check(text, lang=lang, allowed_urls=URLS).allowed, (topic, lang)
 
 
 @pytest.mark.parametrize("category,lang,text", [(c, l, s) for c, langs in BANK.items() for l, items in langs.items() for s in items])
@@ -50,6 +54,13 @@ CLOSE_PARAPHRASES = [
     ("hi", "आप अपनी दवा की खुराक दोगुनी कर लीजिए।"),
     ("bn", "আপনি ওষুধের মাত্রা দ্বিগুণ করুন।"),
     ("ta", "உங்கள் மருந்தின் அளவை இரட்டிப்பாக்கிக் கொள்ளுங்கள்."),
+    ("en", "Turmeric and ayurvedic kadha can cure cancer naturally."),
+    ("en", "You could do yoga instead of chemotherapy."),
+    ("en", "You should skip meals during Navratri."),
+    ("hi", "आयुर्वेदिक काढ़ा कैंसर को ठीक कर देता है।"),
+    ("hi", "कीमोथेरेपी की जगह हल्दी लीजिए।"),
+    ("bn", "কেমোথেরাপির পরিবর্তে আয়ুর্বেদিক ওষুধ নিন।"),
+    ("ta", "கீமோதெரபிக்கு பதிலாக மூலிகை எடுத்துக் கொள்ளுங்கள்."),
 ]
 
 

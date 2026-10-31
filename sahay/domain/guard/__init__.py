@@ -19,7 +19,7 @@ from .claims import FORBIDDEN_OUTPUT, has_medication_directive
 from .judge import Completer, judge
 from .similarity import SimilarityGuard
 
-APPROVED_NUMBERS = frozenset({"112", "14416"})
+APPROVED_NUMBERS = frozenset({"112", "14416", "14555"})  # emergency, Tele-MANAS, PM-JAY helpline
 _NUMBER = re.compile(r"(?<![\w.])\+?\d[\d\s\-]{2,}\d(?![\w])")
 _QUANTITY = re.compile(
     r"\d+(?:[.,]\d+)?\s*(?:mg|mcg|µg|ml|iu|units?|tablets?|pills?|capsules?|drops?|"

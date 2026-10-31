@@ -10,6 +10,11 @@ FORBIDDEN_OUTPUT = {
         r"\b(i (?:have )?alerted|your doctor (?:has been|was) notified|guaranteed cure)\b",
         r"\b(stop taking|increase your dose|decrease your dose|you definitely have)\b",
         r"\b(just breathe|you.ve got this|everything will be (?:fine|okay))\b",
+        # traditional remedies presented as a cure or substitute, and fasting advice
+        (r"\b(?:ayurved\w*|homeopath\w*|naturopath\w*|herbal|herbs?|turmeric|haldi|giloy|kadha|cow urine|gomutra|neem|prayer|puja|yoga)\b"
+        r"[^.?!\n]{0,40}\b(?:cures?|cured|heals?|kills?|shrinks?|reverses?|replaces?)\b"),
+        r"\b(?:instead of|rather than|in place of|no need for)\s+(?:your\s+)?(?:chemo\w*|radiation|surgery|treatment|medicines?|medication)\b",
+        r"\byou (?:should|must|can|need to)\s+(?:not\s+)?(?:fast|skip (?:meals?|food))\b",
     ],
     "hi": [
         r"खुराक\s*(?:बढ़ा|घटा|कम\s*कर)",
@@ -17,6 +22,8 @@ FORBIDDEN_OUTPUT = {
         r"निश्चित\s*रूप\s*से\s*(?:आपको|आप)\s",
         r"गारंटी|पक्का\s*इलाज",
         r"सब\s*ठीक\s*हो\s*जाएगा",
+        r"(?:आयुर्वेद|होम्योपैथी|हल्दी|गिलोय|काढ़ा|गोमूत्र|जड़ी.?बूटी)[^।.?!\n]{0,40}(?:ठीक\s*कर|इलाज\s*कर|खत्म\s*कर)",
+        r"(?:कीमोथेरेपी|कीमो|इलाज)\s*(?:की\s*जगह|के\s*बजाय|के\s*बदले)",
         r"(?:मैंने|हमने)\s*(?:आपके\s*)?(?:डॉक्टर|देखभाल\s*दल)\s*को\s*(?:सूचित|बता)",
     ],
     "bn": [
@@ -25,6 +32,8 @@ FORBIDDEN_OUTPUT = {
         r"নিশ্চিতভাবে\s*আপনার",
         r"গ্যারান্টি|নিশ্চিত\s*নিরাময়",
         r"সব\s*ঠিক\s*হয়ে\s*যাবে",
+        r"(?:আয়ুর্বেদ|হোমিওপ্যাথি|হলুদ|কবিরাজি)[^।.?!\n]{0,40}(?:সারিয়ে|নিরাময়\s*করে|সারায়)",
+        r"(?:কেমোথেরাপি|কেমো|চিকিৎসা)(?:র)?\s*(?:পরিবর্তে|বদলে)",
         r"(?:আমি|আমরা)\s*আপনার\s*(?:ডাক্তার|চিকিৎসা\s*দল)কে\s*(?:জানিয়েছি|জানিয়ে\s*দিয়েছি)",
     ],
     "ta": [
@@ -33,6 +42,8 @@ FORBIDDEN_OUTPUT = {
         r"உறுதியாக\s*உங்களுக்கு",
         r"உத்தரவாதம்|முழுமையான\s*குணம்",
         r"எல்லாம்\s*சரியாகிவிடும்",
+        r"(?:ஆயுர்வேதம்|ஹோமியோபதி|மஞ்சள்|கஷாயம்|மூலிகை)[^.?!\n]{0,40}(?:குணப்படுத்து|குணமாக்கு)",
+        r"(?:கீமோதெரபி|கீமோ|சிகிச்சை)(?:க்கு)?\s*பதிலாக",
         r"(?:நான்|நாங்கள்)\s*உங்கள்\s*(?:மருத்துவ(?:ர்|ரு)|சிகிச்சைக்\s*குழு)(?:க்கு|வுக்கு|விடம்)\s*தெரிவித்து",
     ],
 }
