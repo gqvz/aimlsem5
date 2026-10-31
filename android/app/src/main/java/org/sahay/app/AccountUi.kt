@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -71,15 +72,15 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
-private val Canvas = androidx.compose.ui.graphics.Color(0xFFF1FCFA)
-private val DeepTeal = androidx.compose.ui.graphics.Color(0xFF003C3A)
-private val SoftTeal = androidx.compose.ui.graphics.Color(0xFF1D5351)
-private val MainText = androidx.compose.ui.graphics.Color(0xFF131D1C)
-private val SecondaryText = androidx.compose.ui.graphics.Color(0xFF404848)
-private val Hairline = androidx.compose.ui.graphics.Color(0xFFBFC8C7)
-private val SoftMint = androidx.compose.ui.graphics.Color(0xFFE5F0EE)
-private val Warm = androidx.compose.ui.graphics.Color(0xFFFEDBD0)
-private val WarmText = androidx.compose.ui.graphics.Color(0xFF793019)
+private val Canvas = Tok.Alabaster
+private val DeepTeal = Tok.ForestTeal
+private val SoftTeal = Tok.ForestTeal
+private val MainText = Tok.Charcoal
+private val SecondaryText = Tok.MutedOlive
+private val Hairline = Tok.Hairline
+private val SoftMint = Tok.Mint
+private val Warm = Tok.Blush
+private val WarmText = Tok.Terracotta
 
 private val patientFlowCopy = mapOf(
     "hi" to mapOf(
@@ -134,9 +135,9 @@ private fun FlowShell(model: SahayViewModel, eyebrow: String, title: String, sub
             .verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 16.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp)) {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(eyebrow, color = SoftTeal, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
-                Text(title, color = MainText, fontSize = 28.sp, lineHeight = 36.sp, fontWeight = FontWeight.SemiBold)
-                Text(subtitle, color = SecondaryText, fontSize = 16.sp, lineHeight = 24.sp)
+                Eyebrow(eyebrow, color = SoftTeal)
+                Text(title, color = MainText, fontSize = 32.sp, lineHeight = if (model.language == "en") 36.sp else 46.sp, fontWeight = FontWeight.Medium)
+                Text(subtitle, color = SecondaryText, fontSize = 14.sp, lineHeight = 21.sp)
             }
             if (model.accountError.isNotBlank()) {
                 Surface(color = Warm, shape = RoundedCornerShape(16.dp)) {
@@ -164,8 +165,8 @@ private fun FlowCard(content: @Composable () -> Unit) {
 
 @Composable
 private fun FlowButton(label: String, enabled: Boolean = true, onClick: () -> Unit) {
-    Button(onClick = onClick, enabled = enabled, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
-        colors = ButtonDefaults.buttonColors(containerColor = DeepTeal), shape = RoundedCornerShape(16.dp)) {
+    Button(onClick = onClick, enabled = enabled, modifier = Modifier.fillMaxWidth().heightIn(min = 54.dp),
+        colors = ButtonDefaults.buttonColors(containerColor = DeepTeal), shape = CircleShape) {
         Text(label, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
     }
 }
@@ -345,12 +346,15 @@ fun ClinicianQueueScreen(model: SahayViewModel, onSettings: () -> Unit) {
     FlowShell(model, "CLINICIAN REVIEW · DEMO", "Shared visit briefs",
         "Only patient-approved snapshots appear here. This is not monitored for emergencies.",
         back = null, onSettings = onSettings) {
-        FlowCard {
-            Text("Hello, ${model.accountName}", color = DeepTeal, fontWeight = FontWeight.SemiBold, fontSize = 20.sp)
-            Text("New ${model.clinicianQueue.count { it.optString("status") == "new" }}  ·  In review ${model.clinicianQueue.count { it.optString("status") == "in_review" }}  ·  Reviewed ${model.clinicianQueue.count { it.optString("status") == "reviewed" }}",
-                color = SecondaryText, fontSize = 14.sp)
-            OutlinedButton(onClick = model::loadClinicianQueue, enabled = !model.accountBusy) { Text("Refresh queue") }
-        }
+        val newCount = model.clinicianQueue.count { it.optString("status") == "new" }
+        val inReview = model.clinicianQueue.count { it.optString("status") == "in_review" }
+        val reviewed = model.clinicianQueue.count { it.optString("status") == "reviewed" }
+        val total = model.clinicianQueue.size
+        // Measures the review queue only; it never describes a patient's wellbeing.
+        AssessmentRingCard("Review queue", "Hello, ${model.accountName}", listOf("Hello"),
+            if (total == 0) 0f else reviewed.toFloat() / total, "$reviewed/$total",
+            listOf("New" to "$newCount", "In review" to "$inReview", "Reviewed" to "$reviewed"))
+        OutlinedButton(onClick = model::loadClinicianQueue, enabled = !model.accountBusy) { Text("Refresh queue") }
         FlowButton("Patient messages and files") { model.openCare() }
         OutlinedTextField(search, { search = it.take(100) }, Modifier.fillMaxWidth(),
             label = { Text("Search patient or brief") }, singleLine = true)

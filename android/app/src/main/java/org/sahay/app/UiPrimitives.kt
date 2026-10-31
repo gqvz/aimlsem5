@@ -34,7 +34,7 @@ fun CalmTopBar(title: String, model: SahayViewModel, back: (() -> Unit)? = null,
         verticalAlignment = Alignment.CenterVertically) {
         if (back != null) IconButton(back) { Icon(Icons.Outlined.ArrowBack, wellbeingCopy(model.language, "Back"), tint = CalmInk) }
         WellbeingLabel(title, Modifier.weight(1f).padding(start = if (back == null) 12.dp else 4.dp, end = 8.dp),
-            color = CalmInk, fontSize = 20.sp, fontWeight = FontWeight.SemiBold, maxLines = 2)
+            color = CalmInk, fontSize = 20.sp, fontWeight = FontWeight.Medium, maxLines = 2)
         if (model.screen != Screen.HELP) IconButton({ model.navigate(Screen.HELP) }) { Icon(Icons.Outlined.HelpOutline, model.t("help"), tint = CalmInk) }
         // Settings is already a bottom destination for patients; clinicians access it here.
         if (settings != null) IconButton(settings) { Icon(Icons.Outlined.Settings, wellbeingText(model.language, "settings"), tint = CalmInk) }
@@ -43,19 +43,21 @@ fun CalmTopBar(title: String, model: SahayViewModel, back: (() -> Unit)? = null,
 }
 
 @Composable
-fun CalmFrame(title: String, back: () -> Unit, model: SahayViewModel,
+fun CalmFrame(title: String, back: () -> Unit, model: SahayViewModel, mode: SurfaceMode = SurfaceMode.Clinical,
               bottomBar: (@Composable () -> Unit)? = null, content: @Composable ColumnScope.() -> Unit) {
     val reportHeight = LocalActionAreaHeight.current
     if (bottomBar != null) DisposableEffect(reportHeight) { onDispose { reportHeight(0) } }
-    Column(Modifier.fillMaxSize().background(CalmBackground)) {
-        CalmTopBar(title, model, back)
-        Column(Modifier.weight(1f).fillMaxWidth(), content = content)
-        if (bottomBar != null) {
-            Surface(modifier = Modifier.onSizeChanged { reportHeight(it.height) }, color = CalmBackground) {
-                Column {
-                    HorizontalDivider(color = CalmSoft)
-                    Column(Modifier.fillMaxWidth().padding(horizontal = UiSpace.edge, vertical = 12.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)) { bottomBar() }
+    CompositionLocalProvider(LocalSurfaceMode provides mode) {
+        Column(Modifier.fillMaxSize().background(mode.background)) {
+            CalmTopBar(title, model, back)
+            Column(Modifier.weight(1f).fillMaxWidth(), content = content)
+            if (bottomBar != null) {
+                Surface(modifier = Modifier.onSizeChanged { reportHeight(it.height) }, color = mode.base) {
+                    Column {
+                        HorizontalDivider(color = Tok.Hairline)
+                        Column(Modifier.fillMaxWidth().padding(horizontal = UiSpace.edge, vertical = 12.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)) { bottomBar() }
+                    }
                 }
             }
         }
@@ -72,8 +74,8 @@ fun SettingsLink(title: String, onClick: () -> Unit, detail: String? = null,
         if (icon != null) Icon(icon, null, tint = tint)
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             WellbeingLabel(title, color = tint, fontSize = 16.sp)
-            if (detail != null) WellbeingLabel(detail, color = CalmMuted, fontSize = 14.sp, lineHeight = 20.sp)
+            if (detail != null) WellbeingLabel(detail, color = LocalSurfaceMode.current.muted, fontSize = 14.sp, lineHeight = 20.sp)
         }
-        Icon(Icons.Outlined.ChevronRight, null, tint = CalmMuted)
+        Icon(Icons.Outlined.ChevronRight, null, tint = LocalSurfaceMode.current.muted)
     }
 }

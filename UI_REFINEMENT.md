@@ -77,3 +77,35 @@ APK SHA-256: `a1d4ad19925dc840365508ffda8827b33ea4db67054cbe710178acc2a0f4687c`.
 This pass exercised UI changes and account/care APIs. It did not rerun the earlier model evaluation suite.
 
 These are emulator and code checks. Physical-hand reach, TalkBack use by a person, and testing with cancer patients have not been performed.
+
+## Design system adoption (31 October 2026)
+
+The Android UI now uses the three-surface design system. Tokens, type, motion and component patterns live in `android/app/src/main/java/org/sahay/app/DesignSystem.kt`. **This change has not been compiled or run**: no JDK or Android SDK was available when it was made.
+
+| Surface | Used by |
+| --- | --- |
+| Atmospheric Glass | Arrival, check-in card, guided activities, privacy cover |
+| Clinical Warmth | Today, Talk, Care, Settings, accounts, Help, clinician and admin screens |
+| Sunlit Editorial | Explore, trusted information, art, journal, worry box, small comforts, support notes |
+
+Where the specification and Sahay's commitments differ, the commitments win:
+
+| Specification | Applied instead | Reason |
+| --- | --- | --- |
+| Assessment ring showing 81 to 62 with SLEEP, MOOD and CLAIM | Ring on the clinician queue showing reviewed briefs | Patients get no wellbeing score, and the app collects no sleep data |
+| Sample values such as "15 Sept" or an avatar "J" | Real dates, real initials and real mood-log counts | Fabricated data must not appear in a health app |
+| White text on coral and the lightest chart olive | Terracotta for urgent actions; dark text on the lightest bubble | White on coral is 3.35:1, below WCAG AA |
+| Centred labels in bubbles down to 46px | Count in the bubble, label beneath it | Labels do not fit, particularly in Hindi, Bengali and Tamil |
+| Backdrop blur on glass | Translucent fill and border over a dark backdrop | Compose has no general backdrop filter; the entrance blur needs Android 12 and simply fades on older versions |
+| Line height 1.12 for all display text | 1.12 in English, 1.4 elsewhere | Tight leading clips Indic matras |
+| Serif italic anchor words in every language | English only | Instrument Serif has no Indic glyphs |
+
+### Photography
+
+No photographs of people are bundled. Add licensed files with model releases suitable for a health context to `res/drawable-nodpi` and they replace the drawn, person-free placeholders with no code change:
+
+`photo_lake`, `photo_golden_hour`, `photo_macro_sensory`, `photo_serenity`, `photo_polaroid_two`, `photo_polaroid_three`.
+
+`photo_lake` sits under white text on glass, so it must be dark: keep its luminance at or below the placeholder's (about 4.6:1 for white text through the glass fill). The remaining archetypes (the portrait cutouts, candid portrait and editorial portraits) have no slot yet. Support notes stay illustration-free because portraits beside fictional notes could imply real patients.
+
+Plus Jakarta Sans and Instrument Serif are bundled under the SIL Open Font License; see `android/third_party/fonts/`. New Hindi, Bengali and Tamil strings have not had bilingual review.

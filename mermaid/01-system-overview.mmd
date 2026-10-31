@@ -1,0 +1,54 @@
+---
+config:
+  flowchart:
+    wrappingWidth: 240
+    nodeSpacing: 30
+    rankSpacing: 20
+---
+%% Page 1 of 8: the three systems and their layers
+flowchart LR
+    subgraph FE["FRONTEND: Android app"]
+        direction TB
+        F1["Presentation<br/>Patient, clinician, admin"]
+        F2["On-device features<br/>14 activities, content,<br/>device services"]
+        F3["Application<br/>SahayViewModel, fallback"]
+        F4["Client security + privacy"]
+        F1 ~~~ F2 ~~~ F3 ~~~ F4
+    end
+    subgraph BE["BACKEND: Python API"]
+        direction TB
+        B1["Transport + request security"]
+        B2["Identity + access control"]
+        B3["Domain services"]
+        B4["SQLite persistence"]
+        B5["Deployment security"]
+        B1 ~~~ B2 ~~~ B3 ~~~ B4 ~~~ B5
+    end
+    subgraph AI["AGENTIC AI"]
+        direction TB
+        A1["Input guardrails"]
+        A2["Orchestration<br/>Language, Safety, Supervisor"]
+        A3["Specialist agents"]
+        A4["Output guardrails"]
+        A5["Response + state"]
+        A6["Model access security"]
+        A1 ~~~ A2 ~~~ A3 ~~~ A4 ~~~ A5 ~~~ A6
+    end
+    subgraph EXT["EXTERNAL"]
+        direction TB
+        E1["Model endpoint<br/>OpenCode or Gemma"]
+        E2["STT + TTS<br/>Not yet configured"]
+        E1 ~~~ E2
+    end
+    FE ==>|"JSON,<br/>Bearer"| BE
+    BE ==>|"Text,<br/>history"| AI
+    AI ==>|"Chat<br/>API"| EXT
+
+    classDef semantic fill:#E8F1FB,stroke:#3B6FA5,color:#14304D
+    classDef security fill:#FBE9E7,stroke:#B3452F,color:#5A1D10
+    classDef data fill:#E9F5EC,stroke:#3F8153,color:#163D22
+    classDef external fill:#F0EEF6,stroke:#6B5F92,color:#2C2545,stroke-dasharray:5 3
+    classDef ref fill:#FFF8E1,stroke:#A07F1F,color:#4A3A0C
+    class F1,F2,F3,B3,B4,A2,A3,A5 semantic
+    class F4,B1,B2,B5,A1,A4,A6 security
+    class E1,E2 external

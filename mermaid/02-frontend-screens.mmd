@@ -1,0 +1,33 @@
+---
+config:
+  flowchart:
+    wrappingWidth: 360
+    nodeSpacing: 30
+    rankSpacing: 40
+---
+%% Page 2 of 8: frontend presentation and on-device features
+flowchart TB
+    subgraph UI["Presentation layer"]
+        direction TB
+        Patient["<b>Patient / guest</b><br/>Garden arrival<br/>Today: breathing, check-in,<br/>mood week, activity plan<br/>Talk: chat, voice, sources<br/>Explore: activity library<br/>Care: threads and files<br/>Visit prep: brief, share, revoke"]
+        Clinician["<b>Clinician</b><br/>Invite acceptance, sign-in<br/>Review queue, brief detail<br/>Status and review note<br/>Messages and files<br/>File requests"]
+        Admin["<b>Admin</b><br/>Account list<br/>Clinician invitations<br/>Deactivate accounts<br/>Audit metadata"]
+        Common["<b>Shared screens</b><br/>Help, urgent support<br/>Call care team<br/>Settings: profile, language,<br/>accessibility, speech, model<br/>AI activity: agent handoffs"]
+    end
+    subgraph Local["On-device features"]
+        direction TB
+        Activities["<b>14 local activities</b><br/>Breathing, grounding, quiet moment<br/>Sound sanctuary, garden pairs<br/>Stretch, body scan, safe place<br/>Wind down, small comforts<br/>Worry box, colour your own sky<br/>Journal, support notes"]
+        Content["<b>Bundled content</b><br/>Works without the LLM<br/>content.json, i18n.json<br/>EN, HI, BN, TA<br/>Fixed offline chat replies"]
+        Device["<b>Device services</b><br/>Speech recognition, TTS<br/>Audio recording, ambient audio<br/>Document picker, file export"]
+    end
+    Next["Continues on page 3:<br/>application + client security"]
+    UI --> Local
+    Local --> Next
+
+    classDef semantic fill:#E8F1FB,stroke:#3B6FA5,color:#14304D
+    classDef security fill:#FBE9E7,stroke:#B3452F,color:#5A1D10
+    classDef data fill:#E9F5EC,stroke:#3F8153,color:#163D22
+    classDef external fill:#F0EEF6,stroke:#6B5F92,color:#2C2545,stroke-dasharray:5 3
+    classDef ref fill:#FFF8E1,stroke:#A07F1F,color:#4A3A0C
+    class Patient,Clinician,Admin,Common,Activities,Content,Device semantic
+    class Next ref

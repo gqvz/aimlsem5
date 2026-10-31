@@ -45,7 +45,10 @@ fun CareInbox(model: SahayViewModel) {
         model.careThreads.forEach { thread ->
             val partner=thread.optString(if(model.accountRole=="clinician") "patient_name" else "clinician_name")
             CalmCard {
-                WellbeingLabel(partner,color=CalmInk,fontSize = 20.sp,fontWeight=FontWeight.SemiBold)
+                Row(horizontalArrangement=Arrangement.spacedBy(12.dp),verticalAlignment=Alignment.CenterVertically) {
+                    SahayAvatar(partner)
+                    WellbeingLabel(partner,Modifier.weight(1f),color=CalmInk,fontSize = 20.sp,fontWeight=FontWeight.Medium)
+                }
                 WellbeingLabel(thread.optString("preview").takeIf {it!="null" && it.isNotBlank()} ?: "Open to read messages and files.",color=CalmMuted,fontSize = 14.sp)
                 if(thread.optInt("open_requests")>0) WellbeingLabel("${thread.optInt("open_requests")} open file request(s)",color=CalmInk,fontSize = 14.sp)
                 CalmButton("Open conversation",{model.openCareThread(thread.put("partner_name",partner))})

@@ -1,0 +1,37 @@
+---
+config:
+  flowchart:
+    wrappingWidth: 360
+    nodeSpacing: 30
+    rankSpacing: 40
+---
+%% Page 4 of 8: backend request security and access control
+flowchart TB
+    Prev["From page 3: Android app<br/>Also serves the legacy web prototype"]
+    subgraph Gate["Request security layer"]
+        direction TB
+        Edge["<b>Network edge</b><br/>Host port 127.0.0.1:8000<br/>ThreadingHTTPServer"]
+        Filter["<b>Request filtering</b><br/>POST route allowlist<br/>16 KB limit, 15 MB care + speech<br/>JSON object validation"]
+        Response["<b>Response hardening</b><br/>no-store, nosniff headers<br/>Request logging disabled<br/>Generic 500 errors"]
+    end
+    subgraph Auth["Access control layer"]
+        direction TB
+        Cred["<b>Authentication</b><br/>Salted scrypt passwords<br/>Constant-time comparison<br/>Hashed tokens + invite codes"]
+        Sess["<b>Session lifecycle</b><br/>12-hour expiry<br/>7-day invitations<br/>Revoked on password change<br/>and deactivation"]
+        RBAC["<b>Authorization</b><br/>Role check in each handler<br/>Record ownership<br/>Thread membership<br/>Active partner check<br/>Admin blocked from care API"]
+    end
+    Next["Continues on page 5: accounts, shares, care"]
+    Guest["Continues on page 5: assistant + speech<br/>Guest access, no token required"]
+    Prev ==> Gate
+    Gate --> Auth
+    Auth --> Next
+    Gate -->|"Guest allowed"| Guest
+
+    classDef semantic fill:#E8F1FB,stroke:#3B6FA5,color:#14304D
+    classDef security fill:#FBE9E7,stroke:#B3452F,color:#5A1D10
+    classDef data fill:#E9F5EC,stroke:#3F8153,color:#163D22
+    classDef external fill:#F0EEF6,stroke:#6B5F92,color:#2C2545,stroke-dasharray:5 3
+    classDef ref fill:#FFF8E1,stroke:#A07F1F,color:#4A3A0C
+    class Edge semantic
+    class Filter,Response,Cred,Sess,RBAC security
+    class Prev,Next,Guest ref

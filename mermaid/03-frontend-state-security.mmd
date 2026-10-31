@@ -1,0 +1,34 @@
+---
+config:
+  flowchart:
+    wrappingWidth: 360
+    nodeSpacing: 30
+    rankSpacing: 40
+---
+%% Page 3 of 8: frontend application and client security layers
+flowchart TB
+    Prev["From page 2: screens + local features"]
+    subgraph State["Application layer"]
+        direction TB
+        VM["<b>SahayViewModel</b><br/>Navigation and role routing<br/>Observable state<br/>Recent messages as chat context<br/>Connection and model settings"]
+        Fallback["<b>Client resilience</b><br/>Local chat fallback when offline<br/>Session restore, retry, sign-out"]
+    end
+    subgraph Sec["Client security layer"]
+        direction TB
+        Session["<b>Session protection</b><br/>AES-256-GCM session bundle<br/>Key in Android Keystore<br/>Verified via /api/me on launch"]
+        Privacy["<b>Privacy controls</b><br/>Quick-hide cover<br/>Local saving is opt-in<br/>Clear data, sign-out wipe<br/>allowBackup=false"]
+        Consent["<b>User-in-the-loop gates</b><br/>Microphone permission<br/>Transcript edited before Send<br/>Explicit consent before sharing<br/>Private FileProvider"]
+    end
+    Next["Continues on page 4: JSON over HTTP + Bearer token"]
+    Prev --> State
+    State --> Sec
+    Sec ==> Next
+
+    classDef semantic fill:#E8F1FB,stroke:#3B6FA5,color:#14304D
+    classDef security fill:#FBE9E7,stroke:#B3452F,color:#5A1D10
+    classDef data fill:#E9F5EC,stroke:#3F8153,color:#163D22
+    classDef external fill:#F0EEF6,stroke:#6B5F92,color:#2C2545,stroke-dasharray:5 3
+    classDef ref fill:#FFF8E1,stroke:#A07F1F,color:#4A3A0C
+    class VM,Fallback semantic
+    class Session,Privacy,Consent security
+    class Prev,Next ref

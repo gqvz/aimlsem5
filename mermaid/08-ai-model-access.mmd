@@ -1,0 +1,37 @@
+---
+config:
+  flowchart:
+    wrappingWidth: 360
+    nodeSpacing: 30
+    rankSpacing: 40
+---
+%% Page 8 of 8: model access security and external providers
+flowchart TB
+    Agents["From pages 6 + 7: Language, Supervisor, specialist + Review agents"]
+    subgraph Gateway["Model access security"]
+        direction TB
+        Scope["<b>Least authority</b><br/>No arbitrary tools<br/>No database, messaging,<br/>file or account access"]
+        Config["<b>Endpoint controls</b><br/>Per-request URL + model validation<br/>No embedded credentials<br/>Key sent only to configured endpoint"]
+        Net["<b>Call safeguards</b><br/>Redirects refused<br/>Per-call timeout<br/>Provider errors sanitised"]
+    end
+    subgraph Ext["External providers"]
+        direction LR
+        OpenCode["<b>Default endpoint</b><br/>OpenCode space-bunny-free"]
+        Bridge["<b>Optional SSH bridge</b><br/>Agent socket or existing mux<br/>Strict host keys<br/>No published model port"]
+        Gemma["<b>Remote Ollama</b><br/>gemma3:12b"]
+        OpenCode ~~~ Bridge
+        Bridge --> Gemma
+    end
+    Speech["<b>STT + TTS providers</b><br/>Called by the backend speech adapters<br/>Not yet configured"]
+    Agents -.-> Gateway
+    Gateway ==>|"Chat Completions"| Ext
+    Ext ~~~ Speech
+
+    classDef semantic fill:#E8F1FB,stroke:#3B6FA5,color:#14304D
+    classDef security fill:#FBE9E7,stroke:#B3452F,color:#5A1D10
+    classDef data fill:#E9F5EC,stroke:#3F8153,color:#163D22
+    classDef external fill:#F0EEF6,stroke:#6B5F92,color:#2C2545,stroke-dasharray:5 3
+    classDef ref fill:#FFF8E1,stroke:#A07F1F,color:#4A3A0C
+    class Scope,Config,Net security
+    class Agents ref
+    class OpenCode,Bridge,Gemma,Speech external

@@ -90,13 +90,13 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.Typography
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -110,6 +110,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
@@ -119,26 +120,28 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.view.WindowInsetsControllerCompat
 import kotlinx.coroutines.delay
 
-private val Mint = androidx.compose.ui.graphics.Color(0xFFF1FCFA)
-private val Teal = androidx.compose.ui.graphics.Color(0xFF003C3A)
-private val TealSoft = androidx.compose.ui.graphics.Color(0xFF1D5351)
-private val Ink = androidx.compose.ui.graphics.Color(0xFF131D1C)
-private val Muted = androidx.compose.ui.graphics.Color(0xFF4A5553)
-private val Pale = androidx.compose.ui.graphics.Color(0xFFE6F2F0)
-private val Peach = androidx.compose.ui.graphics.Color(0xFFFFDBD0)
-private val Rust = androidx.compose.ui.graphics.Color(0xFF97472E)
-private val Rose = androidx.compose.ui.graphics.Color(0xFFF9ECE8)
-private val Line = androidx.compose.ui.graphics.Color(0xFFDCE8E5)
+private val Mint = Tok.Alabaster
+private val Teal = Tok.ForestTeal
+private val TealSoft = Tok.ForestTeal
+private val Ink = Tok.Charcoal
+private val Muted = Tok.MutedOlive
+private val Pale = Tok.Mint
+private val Peach = Tok.Blush
+// Urgent actions stay terracotta: white text on coral is below WCAG AA.
+private val Rust = Tok.Terracotta
+private val Rose = Tok.Blush
+private val Line = Tok.Hairline
 
 @Composable
 fun SahayTheme(content: @Composable () -> Unit) {
     MaterialTheme(
-        colorScheme = lightColorScheme(primary = CalmInk, onPrimary = androidx.compose.ui.graphics.Color.White,
-            secondary = CalmInk, secondaryContainer = CalmSoft, onSecondaryContainer = CalmInk, background = CalmBackground, surface = androidx.compose.ui.graphics.Color.White,
-            onSurface = CalmInk, onSurfaceVariant = CalmMuted, outline = androidx.compose.ui.graphics.Color(0xFF718C85)),
-        typography = Typography(),
+        colorScheme = lightColorScheme(primary = Tok.ForestTeal, onPrimary = androidx.compose.ui.graphics.Color.White,
+            secondary = Tok.ForestTeal, secondaryContainer = Tok.ButterActive, onSecondaryContainer = Tok.Espresso, background = CalmBackground, surface = androidx.compose.ui.graphics.Color.White,
+            onSurface = CalmInk, onSurfaceVariant = androidx.compose.ui.graphics.Color(0xFF4F4E44), outline = Tok.ChartMid, error = Tok.Terracotta),
+        typography = sahayTypography(),
         content = content
     )
 }
@@ -195,10 +198,20 @@ fun SahayApp(
     val accountScreen = model.screen in setOf(Screen.RESTORING, Screen.PATIENT_ACCOUNT, Screen.CLINICIAN_AUTH, Screen.SHARE,
         Screen.CLINICIAN_QUEUE, Screen.CLINICIAN_DETAIL, Screen.ADMIN, Screen.SETTINGS, Screen.CARE, Screen.THREAD, Screen.ACTIVITY, Screen.AGENT_INSPECT)
     val keyboardOpen = WindowInsets.ime.getBottom(LocalDensity.current) > 0
+    val immersive = model.screen == Screen.WELCOME
+    val editorial = model.screen in setOf(Screen.PATHS, Screen.INFO)
+    val screenColor = if (editorial) Tok.Cream else CalmBackground
+    val view = LocalView.current
+    SideEffect {
+        (view.context as? android.app.Activity)?.window?.let { window ->
+            WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars = !immersive
+        }
+    }
 
-    CompositionLocalProvider(LocalActionAreaHeight provides reportHeight) {
+    CompositionLocalProvider(LocalActionAreaHeight provides reportHeight, LocalReduceMotion provides model.reduceMotion,
+        LocalSurfaceMode provides if (editorial) SurfaceMode.Editorial else SurfaceMode.Clinical) {
     Scaffold(
-        containerColor = CalmBackground,
+        containerColor = screenColor,
         snackbarHost = { SnackbarHost(snackbars, Modifier.windowInsetsPadding(WindowInsets.ime.exclude(WindowInsets.navigationBars)).padding(bottom = actionHeight)) },
         topBar = {
             if (model.screen != Screen.WELCOME && !accountScreen) SahayHeader(model, onStopSpeaking, onSettings = model::openSettings)
@@ -210,7 +223,8 @@ fun SahayApp(
             if (!keyboardOpen && (patientTabs || clinicianTabs)) BottomNavigation(model)
         }
     ) { padding ->
-        Box(Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding).imePadding()) {
+        // The arrival is full-bleed and applies its own system-bar padding.
+        Box((if (immersive) Modifier.fillMaxSize() else Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding)).imePadding()) {
             when (model.screen) {
                 Screen.WELCOME -> CalmArrival(model)
                 Screen.HOME -> TodayHome(model)
@@ -248,7 +262,7 @@ private fun SahayHeader(model: SahayViewModel, onStopSpeaking: () -> Unit, onSet
         Screen.HELP -> model::closeHelp
         Screen.INFO, Screen.QUESTIONS, Screen.EXERCISE -> model::navigateHome
         else -> null
-    }, modifier = Modifier.background(CalmBackground).statusBarsPadding())
+    }, modifier = Modifier.background(if (model.screen in setOf(Screen.PATHS, Screen.INFO)) Tok.Cream else CalmBackground).statusBarsPadding())
 }
 
 @Composable
@@ -263,7 +277,7 @@ private fun BottomNavigation(model: SahayViewModel) {
         Triple(Screen.PATHS, Icons.Outlined.Palette, wellbeingText(model.language, "activities")),
         Triple(Screen.CARE, Icons.Outlined.PersonOutline, when (model.language) { "hi" -> "देखभाल"; "bn" -> "চিকিৎসা"; "ta" -> "சிகிச்சை"; else -> "Care" }),
         Triple(Screen.SETTINGS, Icons.Outlined.Settings, wellbeingText(model.language, "settings")))
-    androidx.compose.material3.NavigationBar(containerColor = CalmBackground) {
+    androidx.compose.material3.NavigationBar(containerColor = if (model.screen == Screen.PATHS || model.screen == Screen.INFO) Tok.Cream else CalmBackground) {
         choices.forEach { (screen,icon,label) ->
             val fullLabel = if (model.accountRole == "clinician") label else wellbeingText(model.language, when(screen) {
                 Screen.HOME -> "home"; Screen.CHAT -> "talk"; Screen.PATHS -> "activities"; Screen.CARE -> "care"; else -> "settings"
@@ -277,15 +291,15 @@ private fun BottomNavigation(model: SahayViewModel) {
             NavigationBarItem(selected = model.screen == screen, onClick = {
                 if(screen == Screen.CARE) model.openCare() else if(screen == Screen.SETTINGS) model.openSettings() else model.navigate(screen)
             }, icon = { Icon(icon, fullLabel) }, label = { Text(compactLabel, modifier = Modifier.clearAndSetSemantics { contentDescription = fullLabel }, fontSize = 12.sp, maxLines = 1, textAlign = TextAlign.Center) },
-                colors = androidx.compose.material3.NavigationBarItemDefaults.colors(selectedIconColor = CalmInk, selectedTextColor = CalmInk, indicatorColor = CalmSoft, unselectedIconColor = CalmMuted, unselectedTextColor = CalmMuted))
+                colors = androidx.compose.material3.NavigationBarItemDefaults.colors(selectedIconColor = Tok.ForestTeal, selectedTextColor = Tok.ForestTeal, indicatorColor = Tok.Mint, unselectedIconColor = CalmMuted, unselectedTextColor = CalmMuted))
         }
     }
 }
 
 @Composable
 private fun SurfaceCard(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
-    Surface(modifier = modifier, shape = RoundedCornerShape(16.dp), color = androidx.compose.ui.graphics.Color.White,
-        shadowElevation = 2.dp, border = BorderStroke(1.dp, Line), content = content)
+    Surface(modifier = modifier, shape = RoundedCornerShape(20.dp), color = androidx.compose.ui.graphics.Color.White,
+        border = BorderStroke(1.dp, Line), content = content)
 }
 
 @Composable
@@ -311,7 +325,7 @@ private fun SectionTitle(text: String) {
 
 @Composable
 private fun PrimaryButton(label: String, onClick: () -> Unit, modifier: Modifier = Modifier, icon: @Composable (() -> Unit)? = null) {
-    Button(onClick = onClick, modifier = modifier.heightIn(min = 56.dp), shape = RoundedCornerShape(16.dp),
+    Button(onClick = onClick, modifier = modifier.heightIn(min = 54.dp), shape = CircleShape,
         colors = ButtonDefaults.buttonColors(containerColor = Teal, contentColor = androidx.compose.ui.graphics.Color.White)) {
         Text(label, fontWeight = FontWeight.SemiBold)
         if (icon != null) { Spacer(Modifier.width(6.dp)); icon() }
@@ -422,7 +436,7 @@ private fun MessageBubble(message: ChatMessage, model: SahayViewModel, onSpeak: 
         Text(if (message.fromUser) "${model.t("chat")} · ${message.time}" else "Sahay · AI${if (message.time.isNotBlank()) " · ${message.time}" else ""}",
             color = if (message.fromUser) Muted else Teal, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
         Spacer(Modifier.height(8.dp))
-        Surface(shape = RoundedCornerShape(16.dp), color = if (message.fromUser) TealSoft else androidx.compose.ui.graphics.Color.White,
+        Surface(shape = RoundedCornerShape(20.dp), color = if (message.fromUser) TealSoft else androidx.compose.ui.graphics.Color.White,
             border = if (message.fromUser) null else BorderStroke(1.dp, Line), modifier = Modifier.fillMaxWidth(if (message.fromUser) 0.82f else 0.92f)) {
             Column(Modifier.padding(16.dp)) {
                 Text(message.text, color = if (message.fromUser) androidx.compose.ui.graphics.Color.White else Ink, fontSize = 14.sp, lineHeight = 21.sp)
@@ -539,16 +553,16 @@ private fun ExerciseScreen(model: SahayViewModel) {
 
 @Composable
 private fun InfoScreen(model: SahayViewModel, onOpenUrl: (String) -> Unit) {
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text(model.t("infoTitle").uppercase(), color = Teal, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
-        Text(model.t("infoHeading"), color = Ink, fontSize = 28.sp, fontWeight = FontWeight.SemiBold)
+    Column(Modifier.fillMaxSize().background(Tok.Cream).verticalScroll(rememberScrollState()).padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Eyebrow(model.t("infoTitle"))
+        Text(model.t("infoHeading"), color = Tok.Espresso, fontFamily = SahaySerif, fontSize = 34.sp, lineHeight = if (model.language == "en") 38.sp else 48.sp)
         Text(model.t("infoLead"), color = Muted, fontSize = 14.sp, lineHeight = 19.sp)
         model.content.cards(model.language).forEach { card ->
             SurfaceCard(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp)) {
-                    Text("NATIONAL CANCER INSTITUTE", color = Teal, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                    Eyebrow("National Cancer Institute")
                     Spacer(Modifier.height(8.dp))
-                    Text(card.title, color = Teal, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                    Text(card.title, color = Tok.Espresso, fontFamily = SahaySerif, fontSize = 22.sp, lineHeight = 28.sp)
                     Spacer(Modifier.height(8.dp))
                     Text(card.summary, color = Muted, fontSize = 14.sp, lineHeight = 19.sp)
                     Spacer(Modifier.height(8.dp))
@@ -705,7 +719,7 @@ private fun HelpCard(title: String, hint: String, number: String, model: SahayVi
             Spacer(Modifier.height(8.dp))
             Text(hint, color = Muted, fontSize = 14.sp)
             Spacer(Modifier.height(8.dp))
-            Button(onClick = { onDial(number) }, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp), shape = RoundedCornerShape(10.dp),
+            Button(onClick = { onDial(number) }, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp), shape = CircleShape,
                 colors = ButtonDefaults.buttonColors(containerColor = if (urgent) Rust else Teal)) {
                 Icon(Icons.Outlined.Call, null, Modifier.size(19.dp))
                 Spacer(Modifier.width(7.dp))
@@ -717,7 +731,7 @@ private fun HelpCard(title: String, hint: String, number: String, model: SahayVi
 
 @Composable
 private fun PrivacyCover(model: SahayViewModel) {
-    Column(Modifier.fillMaxSize().background(Pale).systemBarsPadding().padding(24.dp), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(Modifier.fillMaxSize().background(Tok.SageGradient).systemBarsPadding().padding(24.dp), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
         Image(painterResource(R.drawable.sahay_emblem), null, Modifier.size(105.dp))
         Spacer(Modifier.height(24.dp))
         Text(model.t("privacyCover"), color = Teal, fontSize = 28.sp, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center)

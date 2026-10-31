@@ -1,17 +1,17 @@
-# Graph Report - aiml  (2026-10-13)
+# Graph Report - aimlsem5  (2026-10-31)
 
 ## Corpus Check
-- 58 files · ~312,299 words
+- 67 files · ~89,263 words
 - Verdict: corpus is large enough that graph structure adds value.
-- Unclassified: 22 file(s) not represented in the graph (top: .ttf 8, (none) 4, .xml 2)
+- Unclassified: 36 file(s) not represented in the graph (top: .ttf 14, .mmd 8, (none) 4)
 
 ## Summary
-- 916 nodes · 2020 edges · 43 communities (25 shown, 18 thin omitted)
-- Extraction: 90% EXTRACTED · 10% INFERRED · 0% AMBIGUOUS · INFERRED: 203 edges (avg confidence: 0.87)
+- 1044 nodes · 2305 edges · 56 communities (36 shown, 20 thin omitted)
+- Extraction: 90% EXTRACTED · 10% INFERRED · 0% AMBIGUOUS · INFERRED: 239 edges (avg confidence: 0.86)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `5751b6fb`
+- Built from commit: `cd11d51a`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -22,6 +22,7 @@
 - app.js
 - MainActivity.kt
 - CareUi.kt
+- DesignSystem.kt
 - Gentle Breathing Exercise
 - engine.py
 - Sahay Updated System Architecture (ARCHITECTURE.md)
@@ -38,42 +39,55 @@
 - Explore/Activities Screen QA (English)
 - Composable
 - Patient-Clinician Messaging and Files
-- ModelError
-- CareTests
+- WellbeingLabel
+- test_model_configuration.py
 - Mobile UI Refinement
 - .send
-- BookkeepingTests
+- model-tunnel
 - Rebuild and emulator validation - 13 October 2026
 - .transcribeAudio
-- .run
+- Eight-Agent Task Graph
 - Explore Wellbeing Activities (no streaks)
 - kratos-stream.sh
-- ActivityAgent
+- ModelClient
+- SpecialistModel
+- model-tunnel
+- Composable
 - CLAUDE.md
+- backend
+- UiPrimitives.kt
+- Model Configuration Update (12 Oct 2026)
+- .stop
+- compose.gemma.yaml
+- Kratos LLM restored — 13 October 2026
+- SahayPhoto
+- json
+- SurfaceMode
+- Sahay architecture diagrams
 
 ## God Nodes (most connected - your core abstractions)
-1. `SahayViewModel` - 133 edges
+1. `SahayViewModel` - 134 edges
 2. `Sahay Updated System Architecture (ARCHITECTURE.md)` - 43 edges
-3. `respond()` - 31 edges
-4. `SahayApp()` - 27 edges
-5. `WellbeingLabel()` - 27 edges
+3. `WellbeingLabel()` - 31 edges
+4. `respond()` - 31 edges
+5. `SahayApp()` - 27 edges
 6. `ModelClient` - 24 edges
 7. `Screen` - 22 edges
-8. `local()` - 21 edges
-9. `render()` - 21 edges
-10. `MainActivity` - 20 edges
+8. `handle()` - 22 edges
+9. `local()` - 21 edges
+10. `render()` - 21 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `Sahay Updated Architecture PDF (5 Oct snapshot)` --semantically_similar_to--> `Sahay Updated System Architecture (ARCHITECTURE.md)`  [INFERRED] [semantically similar]
   output/pdf/Sahay_Updated_Architecture.pdf → ARCHITECTURE.md
 - `Invented Source Links Found in First Pass` --conceptually_related_to--> `_passes_output_check()`  [INFERRED]
   evals/README.md → engine.py
+- `Calibrated Classification Instructions Fix` --conceptually_related_to--> `LanguageAgent`  [INFERRED]
+  OVERHAUL_VALIDATION.md → agents.py
 - `Salted scrypt Passwords and Hashed Tokens` --references--> `_password_hash()`  [INFERRED]
   ARCHITECTURE.md → bookkeeping.py
 - `Admin Bookkeeping Screens` --conceptually_related_to--> `handle()`  [INFERRED]
   DOCTOR_UI_STITCH_PROMPT.md → bookkeeping.py
-- `Endpoint Credential Isolation and Redirect Rejection` --references--> `ModelClient`  [INFERRED]
-  MODEL_CONFIGURATION_VALIDATION.md → engine.py
 
 ## Import Cycles
 - None detected.
@@ -96,35 +110,35 @@
 - **Sahay Android QA Screenshots** — artifacts_qa_activities, artifacts_qa_activities_hindi, artifacts_qa_arrival, artifacts_qa_arrival_final, artifacts_qa_art [INFERRED 0.85]
 - **Tamil small-screen refinement QA pass** — artifacts_qa_refinement_small_tamil_breathing, artifacts_qa_refinement_small_tamil_breathing_final, artifacts_qa_refinement_small_tamil_explore, artifacts_qa_refinement_small_tamil_explore_final, artifacts_qa_refinement_small_tamil_navigation_final, artifacts_qa_refinement_small_tamil_settings [INFERRED 0.85]
 
-## Communities (43 total, 18 thin omitted)
+## Communities (56 total, 20 thin omitted)
 
 ### Community 0 - "bookkeeping.py"
-Cohesion: 0.06
-Nodes (32): GET /api/health, Speech Flow (Device or API STT/TTS), ApiError, _audit(), _auth(), connection(), _create_user(), handle() (+24 more)
-
-### Community 1 - "WellbeingUi.kt"
-Cohesion: 0.05
-Nodes (29): AmbientAudio, AgentInspector(), CareConversation(), CareInbox(), CareMessage(), SettingsPage(), SettingSwitch(), CalmFrame() (+21 more)
+Cohesion: 0.07
+Nodes (29): Speech Flow (Device or API STT/TTS), ApiError, _audit(), _auth(), connection(), _create_user(), handle(), init_db() (+21 more)
 
 ### Community 2 - "respond"
-Cohesion: 0.05
-Nodes (16): POST /api/model/test, model_for_request(), ModelClient, respond(), test_model_connection(), main(), AgentTests, CatalogueParityTests (+8 more)
+Cohesion: 0.13
+Nodes (6): respond(), EngineTests, FakeCrisisModel, FakeFabricatedCitationModel, FakeSafeModel, FakeUnsafeModel
 
 ### Community 4 - "app.js"
 Cohesion: 0.14
 Nodes (39): CARD_COPY, CARD_FALLBACK, cardCopy(), changeView(), chat(), clearAll(), e(), exercise() (+31 more)
+
+### Community 7 - "DesignSystem.kt"
+Cohesion: 0.04
+Nodes (5): dashedContour(), sahayTypography(), sans(), Tok, SahayTheme()
 
 ### Community 8 - "Gentle Breathing Exercise"
 Cohesion: 0.09
 Nodes (29): QA: Garden Pairs memory game (8 face-down cards, 0 of 4 pairs), QA: Garden Pairs memory game (reveal state), QA: AI model settings with keyboard open, QA: AI model settings provider HTTP 403 error, QA: Today plan screen (sound sanctuary, gentle breath, companion), QA: Arrival screen 'Take a little pause' with garden, QA: Care team sign in, email field with keyboard (CTA disabled), QA: Care team sign in, password field with keyboard (CTA enabled) (+21 more)
 
 ### Community 10 - "engine.py"
-Cohesion: 0.21
-Nodes (10): ReviewAgent, SafetyAgent, choose_action(), choose_card(), _fallback_response(), _json_object(), _matches(), more_cautious() (+2 more)
+Cohesion: 0.11
+Nodes (21): ActivityAgent, AgentGraph, KnowledgeAgent, LanguageAgent, ReviewAgent, SafetyAgent, State, SupervisorAgent (+13 more)
 
 ### Community 11 - "Sahay Updated System Architecture (ARCHITECTURE.md)"
 Cohesion: 0.16
-Nodes (15): On-device Demo Fallback, Sahay Updated System Architecture (ARCHITECTURE.md), Public Agent Trace (agent_trace), POST /api/message, Two-way Care Messages and Files, Fixed Localized Fallback, No Whole-Turn Deadline (limitation), Response Mode (live/fixed/demo/fallback) (+7 more)
+Nodes (17): On-device Demo Fallback, Sahay Updated System Architecture (ARCHITECTURE.md), Activity Agent, Public Agent Trace (agent_trace), Sahay Android App (Kotlin/Jetpack Compose), POST /api/message, Two-way Care Messages and Files, Fixed Localized Fallback (+9 more)
 
 ### Community 13 - "SahayApp"
 Cohesion: 0.22
@@ -143,12 +157,12 @@ Cohesion: 0.10
 Nodes (3): AccountHttpError, CareQuestion, ChatMessage
 
 ### Community 17 - "Sahay README"
-Cohesion: 0.14
-Nodes (17): Sahay for Android README, Sahay_Pixel_9 Low-memory Emulator, Docker Course Deployment, Clinician File Request Fulfillment, gemma3:12b via Ollama (resume-ollama), compose.yaml (Backend Service), compose.gemma.yaml (Optional SSH Model Bridge), Live Gemma Evaluation (Fictional Course Cases) (+9 more)
+Cohesion: 0.22
+Nodes (9): Sahay for Android README, Sahay_Pixel_9 Low-memory Emulator, Clinician File Request Fulfillment, Sahay Overhaul Validation (5 Oct 2026), Sahay README, Quick Hide Screen Cover, Tele-MANAS 14416 and India Emergency 112, Original Web Prototype (+1 more)
 
 ### Community 18 - "Stitch Account and Sharing References"
-Cohesion: 0.15
-Nodes (15): Sahay Android App (Kotlin/Jetpack Compose), Four-Language Support (en, hi, bn, ta), Role Routing (Patient/Clinician/Admin), Sahay Wellbeing Prototype, SahayViewModel, SessionStore AES-GCM Session Encryption, Stitch Screen: Clinician Invited Sign-In, Stitch Screen: Share Visit Brief & Consent (+7 more)
+Cohesion: 0.18
+Nodes (11): Four-Language Support (en, hi, bn, ta), SessionStore AES-GCM Session Encryption, Stitch Screen: Clinician Invited Sign-In, Stitch Screen: Share Visit Brief & Consent, Stitch Screen: Patient Account & Security, Stitch Screen: Welcome & Role Entry, Stitch Account and Sharing References, Stitch Teal Material Palette (+3 more)
 
 ### Community 19 - "Settings screen (account + Language and comfort)"
 Cohesion: 0.20
@@ -174,49 +188,93 @@ Nodes (10): ClinicianAuthScreen(), ClinicianQueueScreen(), displayIst(), FlowBut
 Cohesion: 0.24
 Nodes (9): Care Conversation Thread (Return, Final), Clinician Sign-in Screen, Clinician Patient Conversations List, Clinician Review Queue (Shared Visit Briefs), Clinician Settings Screen (Final), Clinician Review Queue with Bottom Tabs (Final), Sahay Clinician Portal, Multilingual and Larger-Text Accessibility (+1 more)
 
-### Community 26 - "ModelError"
-Cohesion: 0.20
-Nodes (4): LanguageAgent, Language Agent, ModelError, _NoModelRedirect
+### Community 26 - "WellbeingLabel"
+Cohesion: 0.18
+Nodes (18): CareInbox(), SahayAvatar(), SettingsPage(), SettingSwitch(), WellbeingLabel(), ActivityLayout(), ActivityRow(), ActivityScreen() (+10 more)
+
+### Community 27 - "test_model_configuration.py"
+Cohesion: 0.13
+Nodes (6): POST /api/model/test, model_for_request(), test_model_connection(), LocalProvider, ModelConfigurationTests, wire()
 
 ### Community 28 - "Mobile UI Refinement"
 Cohesion: 0.31
 Nodes (3): Mobile UI Refinement, Hoober: How Users Hold Mobile Devices (2013), Mehrotra et al.: Action Bar Adaptations for One-Handed Use (2022)
 
+### Community 31 - "model-tunnel"
+Cohesion: 0.12
+Nodes (16): depends_on, environment, context, dockerfile, LLM_API_KEY, LLM_API_URL, LLM_MODEL, LLM_TIMEOUT (+8 more)
+
 ### Community 32 - "Rebuild and emulator validation - 13 October 2026"
 Cohesion: 0.22
 Nodes (8): Artifacts, Emulator and memory, Fix made during checking, Graphify, Live AI limitation, Rebuild and emulator validation - 13 October 2026, Result, Verification
 
-### Community 34 - ".run"
-Cohesion: 0.12
-Nodes (14): AgentGraph, EmotionalSupportAgent, KnowledgeAgent, State, SupervisorAgent, VisitAgent, Emotional Support Agent, Knowledge Agent (+6 more)
+### Community 34 - "Eight-Agent Task Graph"
+Cohesion: 0.17
+Nodes (9): EmotionalSupportAgent, VisitAgent, Emotional Support Agent, Knowledge Agent, Original Supplied Clinical Escalation Architecture, Safety Agent, Supervisor Agent, Visit Preparation Agent (+1 more)
 
 ### Community 36 - "Explore Wellbeing Activities (no streaks)"
 Cohesion: 0.67
 Nodes (4): Patient Explore Tab, Five-Senses Grounding Exercise (Final), Journal Reflection with Keyboard (Final), Explore Wellbeing Activities (no streaks)
 
-### Community 44 - "ActivityAgent"
-Cohesion: 0.33
-Nodes (4): ActivityAgent, Activity Agent, Nine Local Activities, Sahay Updated Architecture PDF (5 Oct snapshot)
+### Community 41 - "ModelClient"
+Cohesion: 0.15
+Nodes (5): GET /api/health, ModelClient, public_model_configuration(), SahayHandler, ModelHttpTests
+
+### Community 42 - "SpecialistModel"
+Cohesion: 0.18
+Nodes (3): AgentTests, CatalogueParityTests, SpecialistModel
+
+### Community 43 - "model-tunnel"
+Cohesion: 0.15
+Nodes (13): environment, context, dockerfile, LLM_API_URL, LLM_MODEL, LLM_TIMEOUT, build, mem_limit (+5 more)
+
+### Community 44 - "Composable"
+Cohesion: 0.22
+Nodes (21): AssessmentRingCard(), BentoTile(), DateBadge(), entrance(), Eyebrow(), FloatingKeywords(), GlassCard(), MicroPillTimeline() (+13 more)
+
+### Community 46 - "backend"
+Cohesion: 0.18
+Nodes (11): build, cpus, env_file, extra_hosts, mem_limit, ports, restart, volumes (+3 more)
+
+### Community 47 - "UiPrimitives.kt"
+Cohesion: 0.15
+Nodes (6): CareConversation(), CalmFrame(), CalmTopBar(), SettingsLink(), UiSpace, wellbeingText()
+
+### Community 48 - "Model Configuration Update (12 Oct 2026)"
+Cohesion: 0.40
+Nodes (4): OpenCode space-bunny-free Default Model, Model Configuration Update (12 Oct 2026), provider_error Field on Fallbacks, OpenCode Free-Tier HTTP 403 Limitation
+
+### Community 50 - "compose.gemma.yaml"
+Cohesion: 0.20
+Nodes (9): Docker Course Deployment, gemma3:12b via Ollama (resume-ollama), services, volumes, sahay-data, Live Gemma Evaluation (Fictional Course Cases), Invented Source Links Found in First Pass, 19 Fictional Live Gemma Cases (+1 more)
+
+### Community 52 - "SahayPhoto"
+Cohesion: 0.22
+Nodes (9): drawScene(), SahayPhoto, Courtyard, GoldenHour, Lake, MacroSensory, PolaroidThree, PolaroidTwo (+1 more)
+
+### Community 54 - "SurfaceMode"
+Cohesion: 0.40
+Nodes (4): SurfaceMode, Atmospheric, Clinical, Editorial
 
 ## Knowledge Gaps
-- **38 isolated node(s):** `WELCOME`, `RESTORING`, `HOME`, `ACTIVITY`, `CARE` (+33 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 247 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **18 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **48 isolated node(s):** `Atmospheric`, `Clinical`, `Editorial`, `Lake`, `GoldenHour` (+43 more)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 304 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **20 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `SahayViewModel` connect `SahayViewModel` to `WellbeingUi.kt`, `.transcribeAudio`, `MainActivity.kt`, `.accountRequest`, `SahayApp`, `SessionStore.kt`, `SahayViewModel.kt`, `.navigate`, `Composable`, `.send`, `JSONObject`?**
-  _High betweenness centrality (0.195) - this node is a cross-community bridge._
+- **Why does `SahayViewModel` connect `SahayViewModel` to `.transcribeAudio`, `MainActivity.kt`, `CareUi.kt`, `.accountRequest`, `Composable`, `SahayApp`, `SessionStore.kt`, `UiPrimitives.kt`, `SahayViewModel.kt`, `.navigate`, `Composable`, `WellbeingLabel`, `.send`, `JSONObject`?**
+  _High betweenness centrality (0.183) - this node is a cross-community bridge._
 - **Are the 2 inferred relationships involving `SahayViewModel` (e.g. with `Content` and `SessionStore`) actually correct?**
   _`SahayViewModel` has 2 INFERRED edges - model-reasoned connections that need verification._
-- **What connects `WELCOME`, `RESTORING`, `HOME` to the rest of the system?**
-  _38 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **What connects `Atmospheric`, `Clinical`, `Editorial` to the rest of the system?**
+  _48 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `bookkeeping.py` be split into smaller, more focused modules?**
-  _Cohesion score 0.06320109439124487 - nodes in this community are weakly interconnected._
-- **Why does `Sahay README` connect `Sahay README` to `bookkeeping.py`, `respond`, `.run`, `Sahay Updated System Architecture (ARCHITECTURE.md)`, `Stitch Account and Sharing References`, `Mobile UI Refinement`?**
-  _High betweenness centrality (0.066) - this node is a cross-community bridge._
-- **Are the 13 inferred relationships involving `SahayApp()` (e.g. with `.onCreate()` and `ClinicianAuthScreen()`) actually correct?**
-  _`SahayApp()` has 13 INFERRED edges - model-reasoned connections that need verification._
+  _Cohesion score 0.0712962962962963 - nodes in this community are weakly interconnected._
+- **Why does `Sahay README` connect `Sahay README` to `bookkeeping.py`, `Eight-Agent Task Graph`, `ModelClient`, `Sahay Updated System Architecture (ARCHITECTURE.md)`, `Model Configuration Update (12 Oct 2026)`, `Stitch Account and Sharing References`, `compose.gemma.yaml`, `test_model_configuration.py`, `Mobile UI Refinement`?**
+  _High betweenness centrality (0.107) - this node is a cross-community bridge._
+- **Are the 23 inferred relationships involving `WellbeingLabel()` (e.g. with `AgentInspector()` and `CareConversation()`) actually correct?**
+  _`WellbeingLabel()` has 23 INFERRED edges - model-reasoned connections that need verification._
 - **Should `WellbeingUi.kt` be split into smaller, more focused modules?**
-  _Cohesion score 0.05401234567901234 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.06666666666666667 - nodes in this community are weakly interconnected._

@@ -1,0 +1,38 @@
+---
+config:
+  flowchart:
+    wrappingWidth: 360
+    nodeSpacing: 30
+    rankSpacing: 40
+---
+%% Page 6 of 8: agentic AI input guardrails and orchestration
+flowchart TB
+    Prev["From page 5: /api/message"]
+    subgraph In["Input guardrail layer"]
+        direction TB
+        Sanitize["<b>Input bounding</b><br/>Text capped at 4,000 characters<br/>Language allowlist<br/>History limited + truncated<br/>User text treated as quoted data"]
+        PreRisk["<b>Pre-model risk gate</b><br/>Local crisis + medical rules<br/>Runs before any model call"]
+    end
+    subgraph Control["Orchestration layer"]
+        direction LR
+        Language["<b>Language agent</b><br/>English working translation<br/>Risk classification<br/>Reply translation"]
+        Safety["<b>Safety agent: deterministic</b><br/>Most cautious of rules + model risk<br/>Crisis, urgent medical,<br/>medical boundary, dependency,<br/>clarify"]
+        Supervisor["<b>Supervisor agent</b><br/>Chooses one action: reflect,<br/>coping, info, questions,<br/>activities, brief"]
+        Language --> Safety --> Supervisor
+    end
+    Fixed["Fixed localized reply, page 7"]
+    Next["Specialist agents, page 7"]
+    Prev ==> In
+    In -->|"No explicit urgent wording"| Control
+    In -->|"Crisis or urgent medical"| Fixed
+    Control -->|"Unsafe or boundary route"| Fixed
+    Control -->|"Ordinary route"| Next
+
+    classDef semantic fill:#E8F1FB,stroke:#3B6FA5,color:#14304D
+    classDef security fill:#FBE9E7,stroke:#B3452F,color:#5A1D10
+    classDef data fill:#E9F5EC,stroke:#3F8153,color:#163D22
+    classDef external fill:#F0EEF6,stroke:#6B5F92,color:#2C2545,stroke-dasharray:5 3
+    classDef ref fill:#FFF8E1,stroke:#A07F1F,color:#4A3A0C
+    class Language,Supervisor semantic
+    class Sanitize,PreRisk,Safety security
+    class Prev,Fixed,Next ref

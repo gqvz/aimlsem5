@@ -5,11 +5,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.TextUnit
-import androidx.compose.ui.unit.isSpecified
 
 val LocalWellbeingLanguage = compositionLocalOf { "en" }
 // Bundled copy keeps the activity controls usable without a translation service.
@@ -232,6 +230,18 @@ Close|बंद करें|বন্ধ করুন|மூடு
 Review|समीक्षा|পর্যালোচনা|பார்வை
 Messages|संदेश|বার্তা|செய்திகள்
 Open to read messages and files.|संदेश और फ़ाइलें पढ़ने के लिए खोलें।|বার্তা ও ফাইল পড়তে খুলুন।|செய்திகளையும் கோப்புகளையும் படிக்கத் திறக்கவும்.
+Today|आज|আজ|இன்று
+Yesterday|कल|গতকাল|நேற்று
+No check-in for this day. That's okay.|इस दिन कोई चेक-इन नहीं। कोई बात नहीं।|এই দিনে কোনো চেক-ইন নেই। তাতে অসুবিধা নেই।|இந்த நாளில் பதிவு இல்லை. பரவாயில்லை.
+You checked in:|आपका चेक-इन:|আপনার চেক-ইন:|உங்கள் பதிவு:
+Your check-ins|आपके चेक-इन|আপনার চেক-ইন|உங்கள் பதிவுகள்
+Start here|यहाँ से शुरू करें|এখান থেকে শুরু করুন|இங்கே தொடங்குங்கள்
+All|सभी|সব|அனைத்தும்
+MIN|मिनट|মিনিট|நிமி
+Check in|चेक-इन करें|চেক-ইন করুন|பதிவு செய்க
+Read|पढ़ें|পড়ুন|படிக்க
+Speak|बोलें|বলুন|பேசு
+Check-ins on 20 recent days:|हाल के 20 दिनों में चेक-इन:|সাম্প্রতিক ২০ দিনে চেক-ইন:|அண்மை 20 நாட்களில் பதிவுகள்:
 """.trimIndent().lines().filter { it.contains('|') }.associate { row ->
     val parts = row.split('|'); parts[0] to parts.drop(1)
 }
@@ -245,9 +255,9 @@ fun wellbeingCopy(language: String, text: String): String {
 fun WellbeingLabel(text: String, modifier: Modifier = Modifier, color: Color = Color.Unspecified,
                    fontSize: TextUnit = TextUnit.Unspecified, fontWeight: FontWeight? = null,
                    lineHeight: TextUnit = TextUnit.Unspecified, textAlign: TextAlign? = null,
-                   maxLines: Int = Int.MAX_VALUE) {
-    // Headings (20sp and up) use a warm serif; body copy stays in the system sans for legibility.
-    val family = if (fontSize.isSpecified && fontSize.value >= 20f) FontFamily.Serif else null
+                   maxLines: Int = Int.MAX_VALUE, serif: Boolean = false) {
+    // The theme supplies the sans family; full serif is reserved for editorial titles and counters.
+    val family = if (serif) SahaySerif else null
     Text(wellbeingCopy(LocalWellbeingLanguage.current, text), modifier, color = color, fontSize = fontSize,
         fontFamily = family, fontWeight = fontWeight, lineHeight = lineHeight, textAlign = textAlign, maxLines = maxLines)
 }
