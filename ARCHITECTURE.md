@@ -169,6 +169,71 @@ Ordinary live turn cost: understand (1) + draft (1) + translate (1, non-English)
 
 Response shape: `route, action, text, card, mode (fixed|live|fallback|demo), translation, agent_trace[], orchestration, + optional activity_plan / suggestions / visit_brief / provider_error`. `agent_trace` lists named steps (Language, Safety, Supervisor, Knowledge, Emotional support, Activity, Visit preparation, Guard, Review) with `mode` of `llm`, `fixed` or `fallback`; the app shows these as "agent handoffs". They are labels over one pipeline, not separate agents.
 
+### Agent flow (who hands off to whom)
+
+The "agents" are named roles in `agent_trace`. Each is a pipeline stage (a function plus a prompt in `prompts.py`), not a separate process. Control only ever moves forward; the safety gate and the guard can short-circuit to fixed copy.
+
+```mermaid
+flowchart TD
+    User(["Patient message"]) --> Sf0
+
+    Sf0["<b>Safety</b> (local rules, no LLM)<br/>assess(original)"]
+    Sf0 -->|"crisis / urgent_medical"| Fixed["<b>Fixed reply</b><br/>FALLBACK copy + help or infection card"]
+    Sf0 -->|ok| Lang1
+
+    Lang1["<b>Language</b> (LLM, UNDERSTAND prompt)<br/>translate to English + classify risk + suggest tool"]
+    Lang1 --> Sf1
+
+    Sf1["<b>Safety</b> gate<br/>risk = max(original, english, model)"]
+    Sf1 -->|"crisis / urgent / medical request /<br/>dependency / concerning"| Fixed
+    Sf1 -->|ordinary| Sup
+
+    Sup["<b>Supervisor</b> (rules + model hint)<br/>picks exactly one tool"]
+    Sup -->|activities| Act["<b>Activity</b> (LLM, ACTIVITY prompt)<br/>chooses 1-3 IDs from catalogue"]
+    Sup -->|coping| Grd["<b>Activity</b> grounding_script<br/>fixed copy"]
+    Sup -->|info| Kn["<b>Knowledge</b> (LLM, KNOWLEDGE prompt)<br/>curated card summary only"]
+    Sup -->|reflect| Em["<b>Emotional support</b> (LLM, SUPPORT prompt)"]
+    Sup -->|"questions / brief"| Vp["<b>Visit preparation</b> (LLM)<br/>QUESTIONS or BRIEF prompt"]
+
+    Act --> Out1(["Reply: intro + activity_plan, no guard<br/>(IDs validated against catalogue)"])
+    Grd --> Out2(["Fixed grounding reply"])
+    Kn --> Lang2
+    Em --> Lang2
+    Vp --> Lang2
+
+    Lang2["<b>Language</b> (LLM, TRANSLATE prompt)<br/>only when reply language != en"]
+    Lang2 --> Guard
+
+    Guard["<b>Guard</b> (3 layers)<br/>deterministic, similarity, judge"]
+    Guard --> Rev["<b>Review</b> (the judge verdict, also checks<br/>meaning drift vs the English draft)"]
+    Rev -->|approved| Live(["mode = live: model reply"])
+    Rev -->|blocked| Fb(["mode = fallback: curated copy"])
+```
+
+Which stage runs when:
+
+| Stage ("agent") | Runs when | Uses LLM | Hands off to |
+|---|---|---|---|
+| Safety (local) | always, first, on the raw text | no | Fixed reply, or Language |
+| Language (understand) | model is configured | yes, 1 call | Safety gate |
+| Safety (gate) | always, after Language | no | Fixed reply, or Supervisor |
+| Supervisor | risk is `ordinary` | no, uses the Language stage's tool hint | one specialist |
+| Activity | action `activities` or `coping` | `activities` only | final reply |
+| Knowledge | action `info` and a curated card exists | yes | Language (translate) |
+| Emotional support | action `reflect` | yes | Language (translate) |
+| Visit preparation | action `questions` or `brief` | yes | Language (translate) |
+| Language (translate) | reply language is not English | yes | Guard |
+| Guard / Review | any model-drafted reply | judge model | live reply or curated fallback |
+
+Supervisor tool choice, in order (`route()` in `pipeline.py`):
+1. A `brief` or `activities` action explicitly requested by the app is used as is. Other requested actions go through `choose_action` (regex on the English text: medical request → `medical_boundary`, then questions/info patterns, else `reflect`).
+2. Phrases like "play a game" or "something to do" force `activities`.
+3. Otherwise the model's suggested tool wins, except that a model-suggested `brief` is dropped unless the patient explicitly asked for one.
+4. Cost or money worries (`is_financial`) are redirected from `reflect`/`coping` to `info`, so they get the curated scheme card.
+5. Family, faith, travel and observance worries (`india_topics`) are redirected from `coping` to `reflect`, because listening fits better than a grounding script.
+
+If the provider fails at any point (or the 45 s turn deadline passes) the `issue` flag is set, risk is treated as `concerning`, no model drafting happens, and the reply is curated copy (`mode = demo` or `fallback`). The steps 3-5 changes above are in the working tree and not yet committed.
+
 ### Safety layer — `sahay/domain/safety`
 
 - `normalize.py`: lowercase, strip invisible chars and apostrophes, punctuation to spaces, collapse repeats, and repair typos against a small vocabulary (`kil` → `kill`).
