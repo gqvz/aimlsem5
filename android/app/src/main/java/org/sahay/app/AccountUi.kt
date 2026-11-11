@@ -71,15 +71,15 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
-private val Canvas = androidx.compose.ui.graphics.Color(0xFFF1FCFA)
-private val DeepTeal = androidx.compose.ui.graphics.Color(0xFF003C3A)
-private val SoftTeal = androidx.compose.ui.graphics.Color(0xFF1D5351)
-private val MainText = androidx.compose.ui.graphics.Color(0xFF131D1C)
-private val SecondaryText = androidx.compose.ui.graphics.Color(0xFF404848)
-private val Hairline = androidx.compose.ui.graphics.Color(0xFFBFC8C7)
-private val SoftMint = androidx.compose.ui.graphics.Color(0xFFE5F0EE)
-private val Warm = androidx.compose.ui.graphics.Color(0xFFFEDBD0)
-private val WarmText = androidx.compose.ui.graphics.Color(0xFF793019)
+private val Canvas = Ember.Petal
+private val DeepTeal = Ember.Clay
+private val SoftTeal = Ember.BurntSienna
+private val MainText = Ember.Onyx
+private val SecondaryText = Ember.WarmGray
+private val Hairline = Ember.Line
+private val SoftMint = Ember.SiennaSoft
+private val Warm = Ember.ErrorSoft
+private val WarmText = Ember.Clay
 
 private val patientFlowCopy = mapOf(
     "hi" to mapOf(
@@ -165,7 +165,9 @@ private fun FlowCard(content: @Composable () -> Unit) {
 @Composable
 private fun FlowButton(label: String, enabled: Boolean = true, onClick: () -> Unit) {
     Button(onClick = onClick, enabled = enabled, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
-        colors = ButtonDefaults.buttonColors(containerColor = DeepTeal), shape = RoundedCornerShape(16.dp)) {
+        colors = ButtonDefaults.buttonColors(containerColor = Ember.Blush, contentColor = Ember.Onyx,
+            disabledContainerColor = Ember.SandyCream, disabledContentColor = Ember.WarmGray),
+        border = BorderStroke(1.5.dp, Ember.BurntSienna.copy(alpha = if (enabled) .5f else .2f)), shape = RoundedCornerShape(20.dp)) {
         Text(label, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
     }
 }

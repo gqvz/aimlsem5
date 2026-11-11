@@ -121,24 +121,22 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
 
-private val Mint = androidx.compose.ui.graphics.Color(0xFFF1FCFA)
-private val Teal = androidx.compose.ui.graphics.Color(0xFF003C3A)
-private val TealSoft = androidx.compose.ui.graphics.Color(0xFF1D5351)
-private val Ink = androidx.compose.ui.graphics.Color(0xFF131D1C)
-private val Muted = androidx.compose.ui.graphics.Color(0xFF4A5553)
-private val Pale = androidx.compose.ui.graphics.Color(0xFFE6F2F0)
-private val Peach = androidx.compose.ui.graphics.Color(0xFFFFDBD0)
-private val Rust = androidx.compose.ui.graphics.Color(0xFF97472E)
-private val Rose = androidx.compose.ui.graphics.Color(0xFFF9ECE8)
-private val Line = androidx.compose.ui.graphics.Color(0xFFDCE8E5)
+private val Mint = Ember.Petal
+private val Teal = Ember.Clay
+private val TealSoft = Ember.BurntSienna
+private val Ink = Ember.Onyx
+private val Muted = Ember.WarmGray
+private val Pale = Ember.SandyCream
+private val Peach = Ember.Blush
+private val Rust = Ember.Rust
+private val Rose = Ember.RoseSoft
+private val Line = Ember.Line
 
 @Composable
 fun SahayTheme(content: @Composable () -> Unit) {
     MaterialTheme(
-        colorScheme = lightColorScheme(primary = CalmInk, onPrimary = androidx.compose.ui.graphics.Color.White,
-            secondary = CalmInk, secondaryContainer = CalmSoft, onSecondaryContainer = CalmInk, background = CalmBackground, surface = androidx.compose.ui.graphics.Color.White,
-            onSurface = CalmInk, onSurfaceVariant = CalmMuted, outline = androidx.compose.ui.graphics.Color(0xFF718C85)),
-        typography = Typography(),
+        colorScheme = EmberColorScheme,
+        typography = EmberTypography,
         content = content
     )
 }
@@ -195,6 +193,8 @@ fun SahayApp(
     val accountScreen = model.screen in setOf(Screen.RESTORING, Screen.PATIENT_ACCOUNT, Screen.CLINICIAN_AUTH, Screen.SHARE,
         Screen.CLINICIAN_QUEUE, Screen.CLINICIAN_DETAIL, Screen.ADMIN, Screen.SETTINGS, Screen.CARE, Screen.THREAD, Screen.ACTIVITY, Screen.AGENT_INSPECT)
     val keyboardOpen = WindowInsets.ime.getBottom(LocalDensity.current) > 0
+
+    NightlySleepNudge(model)
 
     CompositionLocalProvider(LocalActionAreaHeight provides reportHeight) {
     Scaffold(
@@ -263,7 +263,7 @@ private fun BottomNavigation(model: SahayViewModel) {
         Triple(Screen.PATHS, Icons.Outlined.Palette, wellbeingText(model.language, "activities")),
         Triple(Screen.CARE, Icons.Outlined.PersonOutline, when (model.language) { "hi" -> "देखभाल"; "bn" -> "চিকিৎসা"; "ta" -> "சிகிச்சை"; else -> "Care" }),
         Triple(Screen.SETTINGS, Icons.Outlined.Settings, wellbeingText(model.language, "settings")))
-    androidx.compose.material3.NavigationBar(containerColor = CalmBackground) {
+    androidx.compose.material3.NavigationBar(containerColor = Ember.Raise) {
         choices.forEach { (screen,icon,label) ->
             val fullLabel = if (model.accountRole == "clinician") label else wellbeingText(model.language, when(screen) {
                 Screen.HOME -> "home"; Screen.CHAT -> "talk"; Screen.PATHS -> "activities"; Screen.CARE -> "care"; else -> "settings"
@@ -277,7 +277,7 @@ private fun BottomNavigation(model: SahayViewModel) {
             NavigationBarItem(selected = model.screen == screen, onClick = {
                 if(screen == Screen.CARE) model.openCare() else if(screen == Screen.SETTINGS) model.openSettings() else model.navigate(screen)
             }, icon = { Icon(icon, fullLabel) }, label = { Text(compactLabel, modifier = Modifier.clearAndSetSemantics { contentDescription = fullLabel }, fontSize = 12.sp, maxLines = 1, textAlign = TextAlign.Center) },
-                colors = androidx.compose.material3.NavigationBarItemDefaults.colors(selectedIconColor = CalmInk, selectedTextColor = CalmInk, indicatorColor = CalmSoft, unselectedIconColor = CalmMuted, unselectedTextColor = CalmMuted))
+                colors = androidx.compose.material3.NavigationBarItemDefaults.colors(selectedIconColor = CalmInk, selectedTextColor = CalmInk, indicatorColor = Ember.Blush, unselectedIconColor = CalmMuted, unselectedTextColor = CalmMuted))
         }
     }
 }
@@ -311,8 +311,9 @@ private fun SectionTitle(text: String) {
 
 @Composable
 private fun PrimaryButton(label: String, onClick: () -> Unit, modifier: Modifier = Modifier, icon: @Composable (() -> Unit)? = null) {
-    Button(onClick = onClick, modifier = modifier.heightIn(min = 56.dp), shape = RoundedCornerShape(16.dp),
-        colors = ButtonDefaults.buttonColors(containerColor = Teal, contentColor = androidx.compose.ui.graphics.Color.White)) {
+    Button(onClick = onClick, modifier = modifier.heightIn(min = 56.dp), shape = RoundedCornerShape(20.dp),
+        colors = ButtonDefaults.buttonColors(containerColor = Ember.Blush, contentColor = Ember.Onyx),
+        border = BorderStroke(1.5.dp, Ember.BurntSienna.copy(alpha = .5f))) {
         Text(label, fontWeight = FontWeight.SemiBold)
         if (icon != null) { Spacer(Modifier.width(6.dp)); icon() }
     }
@@ -334,7 +335,7 @@ fun StatusBand(model: SahayViewModel) {
     val text = if (!model.backendConnected) nativeText(model.language, "offline") else if (model.liveModel) model.t("statusLive") else model.t("statusDemo")
     Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(13.dp), color = Pale) {
         Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-            Box(Modifier.size(8.dp).clip(CircleShape).background(if (model.backendConnected) Teal else Rust))
+            Box(Modifier.size(8.dp).clip(CircleShape).background(if (model.backendConnected) Ember.Olive else Ember.Clay))
             Spacer(Modifier.width(8.dp))
             Text(text, color = Teal, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
         }
@@ -422,10 +423,10 @@ private fun MessageBubble(message: ChatMessage, model: SahayViewModel, onSpeak: 
         Text(if (message.fromUser) "${model.t("chat")} · ${message.time}" else "Sahay · AI${if (message.time.isNotBlank()) " · ${message.time}" else ""}",
             color = if (message.fromUser) Muted else Teal, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
         Spacer(Modifier.height(8.dp))
-        Surface(shape = RoundedCornerShape(16.dp), color = if (message.fromUser) TealSoft else androidx.compose.ui.graphics.Color.White,
+        Surface(shape = RoundedCornerShape(16.dp), color = if (message.fromUser) Ember.Blush else androidx.compose.ui.graphics.Color.White,
             border = if (message.fromUser) null else BorderStroke(1.dp, Line), modifier = Modifier.fillMaxWidth(if (message.fromUser) 0.82f else 0.92f)) {
             Column(Modifier.padding(16.dp)) {
-                Text(message.text, color = if (message.fromUser) androidx.compose.ui.graphics.Color.White else Ink, fontSize = 14.sp, lineHeight = 21.sp)
+                Text(message.text, color = Ink, fontSize = 14.sp, lineHeight = 21.sp)
                 if (!message.sourceUrl.isNullOrBlank()) {
                     Spacer(Modifier.height(8.dp))
                     Text(message.sourceTitle ?: model.t("source"), modifier = Modifier.heightIn(min = 48.dp).clickable { message.sourceUrl?.let(onOpenUrl) }.padding(vertical = 12.dp),
@@ -696,8 +697,8 @@ private fun HelpCard(title: String, hint: String, number: String, model: SahayVi
     SurfaceCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Surface(shape = RoundedCornerShape(10.dp), color = if (urgent) Peach else Pale) {
-                    Box(Modifier.size(37.dp), contentAlignment = Alignment.Center) { Icon(Icons.Outlined.Call, null, tint = if (urgent) Rust else Teal) }
+                Surface(shape = RoundedCornerShape(10.dp), color = if (urgent) Peach else Ember.LinenChalk) {
+                    Box(Modifier.size(37.dp), contentAlignment = Alignment.Center) { Icon(Icons.Outlined.Call, null, tint = if (urgent) Rust else Ember.Olive) }
                 }
                 Spacer(Modifier.width(8.dp))
                 Text(title, color = Teal, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
@@ -706,7 +707,7 @@ private fun HelpCard(title: String, hint: String, number: String, model: SahayVi
             Text(hint, color = Muted, fontSize = 14.sp)
             Spacer(Modifier.height(8.dp))
             Button(onClick = { onDial(number) }, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp), shape = RoundedCornerShape(10.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = if (urgent) Rust else Teal)) {
+                colors = ButtonDefaults.buttonColors(containerColor = if (urgent) Ember.Rust else Ember.Olive)) {
                 Icon(Icons.Outlined.Call, null, Modifier.size(19.dp))
                 Spacer(Modifier.width(7.dp))
                 Text("${model.t("call")} $number", fontWeight = FontWeight.SemiBold)

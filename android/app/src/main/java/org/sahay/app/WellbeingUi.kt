@@ -49,11 +49,12 @@ import kotlinx.coroutines.delay
 import java.io.File
 import kotlin.math.*
 
-val CalmInk = Color(0xFF164B46)
-val CalmBackground = Color(0xFFF2F7F6)
-val CalmSoft = Color(0xFFE2EDEA)
-val CalmLavender = Color(0xFFECE9F4)
-val CalmMuted = Color(0xFF586B68)
+// Ember (terracotta) roles behind the existing names, so every screen picks up the theme.
+val CalmInk = Ember.Onyx
+val CalmBackground = Ember.Petal
+val CalmSoft = Ember.SandyCream
+val CalmLavender = Ember.TintLilac
+val CalmMuted = Ember.WarmGray
 
 fun wellbeingText(lang: String, key: String): String {
     val words = mapOf(
@@ -76,8 +77,10 @@ fun CalmCard(modifier: Modifier = Modifier, color: Color = Color.White, content:
 }
 @Composable
 fun CalmButton(text: String, onClick: () -> Unit, enabled: Boolean = true, modifier: Modifier = Modifier.fillMaxWidth()) {
-    Button(onClick, modifier.heightIn(min = 56.dp), enabled = enabled, shape = RoundedCornerShape(16.dp),
-        colors = ButtonDefaults.buttonColors(containerColor = CalmInk)) { WellbeingLabel(text, fontSize = 16.sp, fontWeight = FontWeight.SemiBold) }
+    Button(onClick, modifier.heightIn(min = 56.dp), enabled = enabled, shape = RoundedCornerShape(20.dp),
+        colors = ButtonDefaults.buttonColors(containerColor = Ember.Blush, contentColor = Ember.Onyx,
+            disabledContainerColor = Ember.SandyCream, disabledContentColor = Ember.WarmGray),
+        border = androidx.compose.foundation.BorderStroke(1.5.dp, Ember.BurntSienna.copy(alpha = if (enabled) .5f else .2f))) { WellbeingLabel(text, fontSize = 16.sp, fontWeight = FontWeight.SemiBold) }
 }
 @Composable
 fun CalmButton(text: String, enabled: Boolean = true, modifier: Modifier = Modifier.fillMaxWidth(), onClick: () -> Unit) {
@@ -103,7 +106,7 @@ fun HumanHelpLink(model: SahayViewModel) {
 }
 
 @Composable
-private fun ActivityLayout(model: SahayViewModel, actions: @Composable () -> Unit,
+internal fun ActivityLayout(model: SahayViewModel, actions: @Composable () -> Unit,
                            content: @Composable ColumnScope.() -> Unit) {
     CalmPage(activityEntries.first { it.id == model.activityId }.title,
         { model.navigate(Screen.PATHS) }, model, bottomBar = actions) { content(); HumanHelpLink(model) }
@@ -130,15 +133,15 @@ fun CalmArrival(model: SahayViewModel) {
                 val base = size.minDimension * .24f
                 for (i in 0..3) {
                     val progress = if (model.reduceMotion) i / 4f else (wave + i / 4f) % 1
-                    drawCircle(Color(0xFF91B8AE).copy(alpha = (1 - progress) * .24f), base + progress * base * 1.3f, center, style = Stroke(2.dp.toPx()))
+                    drawCircle(Ember.Terracotta.copy(alpha = (1 - progress) * .28f), base + progress * base * 1.3f, center, style = Stroke(2.dp.toPx()))
                 }
-                drawCircle(Color(0xFFD1E4DE), base, center)
+                drawCircle(Ember.Aura, base, center)
                 for (i in 0 until min(taps + 5, 12)) {
                     val angle = i * 2 * PI / min(taps + 5, 12)
                     val petal = center + Offset(cos(angle).toFloat() * base * .42f, sin(angle).toFloat() * base * .42f)
-                    drawCircle(Color(0xFFB4C9BC).copy(alpha = .7f), base * .3f, petal)
+                    drawCircle(Ember.Terracotta.copy(alpha = .55f), base * .3f, petal)
                 }
-                drawCircle(Color(0xFFF0DEAE), base * .19f, center)
+                drawCircle(Ember.Amber, base * .19f, center)
             }
             WellbeingLabel(if (taps == 0) "Touch the garden. Let it grow at your pace." else "A little space, just for this moment.", color = CalmMuted, textAlign = TextAlign.Center, fontSize = 14.sp)
         }
@@ -161,6 +164,7 @@ fun TodayHome(model: SahayViewModel) {
                 fontSize = 28.sp, lineHeight = 36.sp, fontWeight = FontWeight.SemiBold, color = CalmInk)
             WellbeingLabel("Some days need rest. Some days need a little company. There is no right way to use this space.", color = CalmMuted, fontSize = 16.sp, lineHeight = 24.sp)
         }
+        BedtimeReminder(model)
         StatusBand(model)
         CalmCard(color = CalmSoft) {
             val orb by rememberInfiniteTransition(label = "orb").animateFloat(.88f, 1f,
@@ -168,9 +172,9 @@ fun TodayHome(model: SahayViewModel) {
             val scale = if (model.reduceMotion) 1f else orb
             Canvas(Modifier.fillMaxWidth().height(96.dp)) {
                 val c = Offset(size.width / 2, size.height / 2)
-                drawCircle(Color(0xFF91B8AE).copy(alpha = .2f), 44.dp.toPx() * scale, c)
-                drawCircle(Color(0xFF91B8AE).copy(alpha = .35f), 32.dp.toPx() * scale, c)
-                drawCircle(Color(0xFFF2F7F6), 20.dp.toPx() * scale, c)
+                drawCircle(Ember.Terracotta.copy(alpha = .2f), 44.dp.toPx() * scale, c)
+                drawCircle(Ember.Terracotta.copy(alpha = .38f), 32.dp.toPx() * scale, c)
+                drawCircle(Ember.Petal, 20.dp.toPx() * scale, c)
             }
             WellbeingLabel("One gentle breath", Modifier.fillMaxWidth(), fontSize = 20.sp, fontWeight = FontWeight.SemiBold, color = CalmInk, textAlign = TextAlign.Center)
             WellbeingLabel("A quiet two-minute rhythm. No breath holds. You can pause at any time.", Modifier.fillMaxWidth(), color = CalmMuted, fontSize = 16.sp, lineHeight = 24.sp, textAlign = TextAlign.Center)
@@ -189,6 +193,7 @@ fun TodayHome(model: SahayViewModel) {
                 CalmButton(if (model.planBusy) "Finding a gentle plan…" else "Make a gentle plan", model::makeActivityPlan, !model.planBusy)
             }
         }
+        AyurvedaTipCard(model)
         if (model.moodLog.isNotEmpty()) MoodWeek(model)
         if (model.planItems.isNotEmpty()) {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -223,7 +228,7 @@ private fun MoodWeek(model: SahayViewModel) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             days.forEach { day ->
                 val mood = byDay[fmt.format(day)]
-                val tint = when (mood) { "A little unsettled" -> Color(0xFFC9BFE0); "Feeling low" -> Color(0xFFA8CDDF); "Doing okay" -> Color(0xFFA9C4AD); else -> null }
+                val tint = when (mood) { "A little unsettled" -> Ember.MoodWorry; "Feeling low" -> Ember.MoodLow; "Doing okay" -> Ember.MoodCalm; else -> null }
                 Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Box(Modifier.size(28.dp).clip(CircleShape).background(tint ?: Color.Transparent)
                         .border(1.5.dp, tint ?: CalmSoft, CircleShape)
@@ -239,19 +244,20 @@ private fun MoodWeek(model: SahayViewModel) {
 data class ActivityEntry(val id: String, val title: String, val detail: String, val symbol: String, val color: Color)
 val activityEntries = listOf(
     ActivityEntry("breathing", "Gentle breathing", "2 min · A rhythm you can follow or change", "○", CalmSoft),
-    ActivityEntry("grounding", "Notice your surroundings", "2 min · A simple five-senses pause", "✧", Color(0xFFEDEEDB)),
+    ActivityEntry("grounding", "Notice your surroundings", "2 min · A simple five-senses pause", "✧", Ember.TintMoss),
     ActivityEntry("meditation", "A quiet moment", "3 min · Guided attention with optional voice", "☾", CalmLavender),
-    ActivityEntry("sound", "Sound sanctuary", "White noise, brown noise and soft rain", "≈", Color(0xFFDFECF2)),
-    ActivityEntry("memory", "Garden pairs", "An unhurried matching game", "❀", Color(0xFFF4E9EC)),
-    ActivityEntry("stretch", "Gentle stretch", "3 min · Easy movements, seated or standing", "∿", Color(0xFFF0E9D8)),
+    ActivityEntry("sound", "Sound sanctuary", "White noise, brown noise and soft rain", "≈", Ember.TintLinen),
+    ActivityEntry("memory", "Garden pairs", "An unhurried matching game", "❀", Ember.TintRose),
+    ActivityEntry("stretch", "Gentle stretch", "3 min · Easy movements, seated or standing", "∿", Ember.TintSand),
     ActivityEntry("art", "Colour your own sky", "Draw, undo and save your own artwork", "⌁", CalmLavender),
     ActivityEntry("bodyscan", "A slow body scan", "4 min · Notice each part of you, gently", "◍", CalmLavender),
-    ActivityEntry("safeplace", "A safe place", "3 min · Picture somewhere calm", "⌂", Color(0xFFDFECF2)),
-    ActivityEntry("winddown", "Wind down for sleep", "15 or 30 min · Sound that fades out", "☽", Color(0xFFE6E6F2)),
-    ActivityEntry("comforts", "Small comforts", "2 min · Notice what was a little easier", "☼", Color(0xFFF4E9EC)),
+    ActivityEntry("safeplace", "A safe place", "3 min · Picture somewhere calm", "⌂", Ember.TintLinen),
+    ActivityEntry("winddown", "Wind down for sleep", "15 or 30 min · Sound that fades out", "☽", Ember.TintLinen),
+    ActivityEntry("comforts", "Small comforts", "2 min · Notice what was a little easier", "☼", Ember.TintRose),
     ActivityEntry("worry", "Worry box", "Write it down, then let it go. Nothing is saved", "◌", CalmSoft),
     ActivityEntry("journal", "A few words for today", "Write freely. Keep it on your device if you choose", "✎", CalmSoft),
-    ActivityEntry("peers", "Small words of support", "Example notes to read and reflect on", "♡", Color(0xFFF4E9EC)))
+    ActivityEntry("peers", "Small words of support", "Example notes to read and reflect on", "♡", Ember.TintRose),
+    ActivityEntry("ayurveda", "Ayurvedic self-care", "Herbs and daily practices for mind and body", "❦", Ember.LinenChalk))
 
 @Composable
 fun ActivityRow(id: String, model: SahayViewModel) {
@@ -273,7 +279,8 @@ fun ActivityLibrary(model: SahayViewModel) {
             WellbeingLabel("Rest, play or make something. Nothing to achieve, and no streak to keep.", color = CalmMuted, fontSize = 16.sp, lineHeight = 24.sp)
         }
         listOf("Rest and reset" to listOf("breathing", "grounding", "meditation", "bodyscan", "safeplace", "sound", "winddown"),
-            "A little play" to listOf("memory", "stretch"), "Make and reflect" to listOf("art", "comforts", "worry", "journal", "peers")).forEach { (title, ids) ->
+            "A little play" to listOf("memory", "stretch"), "Make and reflect" to listOf("art", "comforts", "worry", "journal", "peers"),
+            "Ayurveda for body and mind" to listOf("ayurveda")).forEach { (title, ids) ->
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 WellbeingLabel(title, color = CalmInk, fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
                 CalmCard { ids.forEachIndexed { i, id ->
@@ -303,6 +310,7 @@ fun ActivityScreen(model: SahayViewModel, onSpeak: (String) -> Unit, stopSpeakin
         "art" -> ArtActivity(model)
         "journal" -> JournalActivity(model)
         "peers" -> PeerActivity(model)
+        "ayurveda" -> AyurvedaActivity(model)
     }
 }
 @Composable
@@ -320,8 +328,8 @@ private fun BreathingActivity(model: SahayViewModel) {
     WellbeingLabel("Keep your breath comfortable. Follow the rhythm only if it feels easy, or breathe at your own pace. Stop if you feel uncomfortable; choose sound or art instead.", color = CalmMuted, fontSize = 14.sp, lineHeight = 21.sp)
     Canvas(Modifier.fillMaxWidth().height(250.dp)) {
         val radius = size.minDimension * .38f * (if (model.reduceMotion) .8f else expanded)
-        drawCircle(Color(0xFFD5E5DF), radius + 20.dp.toPx())
-        drawCircle(Color(0xFF91B8AD), radius)
+        drawCircle(Ember.ClaySoft, radius + 20.dp.toPx())
+        drawCircle(Ember.Terracotta.copy(alpha = .75f), radius)
         drawCircle(CalmBackground.copy(alpha = .5f), radius * .6f)
     }
     WellbeingLabel(if (seconds >= 120) "A little pause, complete" else if (!running) "Ready when you are" else if (phase < 4) "Breathe in gently" else "Let it out gently", color = CalmInk, fontSize = 20.sp, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
@@ -354,7 +362,7 @@ private fun MeditationActivity(model: SahayViewModel, speak: (String) -> Unit) {
     }) {
     WellbeingLabel("A three-minute practice of noticing. Pause whenever you like.", color = CalmMuted)
     CalmCard(color = CalmLavender) { WellbeingLabel(if (seconds == 180) "Your quiet moment is complete." else scripts[step], color = CalmInk, fontSize = 20.sp, lineHeight = 34.sp); WellbeingLabel("${180-seconds} seconds remaining", color = CalmMuted) }
-    LinearProgressIndicator(progress = { seconds / 180f }, modifier = Modifier.fillMaxWidth(), color = CalmInk)
+    LinearProgressIndicator(progress = { seconds / 180f }, modifier = Modifier.fillMaxWidth(), color = Ember.BurntSienna, trackColor = Ember.SandyCream)
     }
 }
 @Composable
@@ -413,7 +421,7 @@ private fun GuidedSteps(model: SahayViewModel, id: String, intro: String, steps:
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 steps.indices.forEach { i ->
                     Box(Modifier.size(if (i == step) 10.dp else 8.dp).clip(CircleShape)
-                        .background(if (i <= step) CalmInk else CalmInk.copy(alpha = .2f)))
+                        .background(if (i <= step) Ember.BurntSienna else Ember.BurntSienna.copy(alpha = .22f)))
                 }
             }
             WellbeingLabel(steps[step], color = CalmInk, fontSize = 28.sp, lineHeight = 36.sp)
@@ -547,7 +555,7 @@ private fun ArtActivity(model: SahayViewModel) {
     },strokes.isNotEmpty())
     }) {
     WellbeingLabel("Make a mark, draw a sky, or follow your hand. You can undo anything.",color=CalmMuted)
-    Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) { listOf("Ink" to CalmInk,"Lilac" to Color(0xFFB49CCA),"Clay" to Color(0xFFD5A477),"Sky" to Color(0xFF729AB7),"Sage" to Color(0xFF9FAF7E)).forEach { (name,shade) ->
+    Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) { listOf("Onyx" to CalmInk,"Terracotta" to Ember.Terracotta,"Amber" to Ember.Amber,"Olive" to Ember.Olive,"Blush" to Color(0xFFE39A88)).forEach { (name,shade) ->
         Surface(Modifier.size(48.dp).semantics { contentDescription = "Drawing colour $name, ${if(color==shade) "selected" else "not selected"}" }.clickable { color=shade },shape=CircleShape,color=shade,border=if(color==shade) androidx.compose.foundation.BorderStroke(3.dp,CalmInk) else null) { Box(contentAlignment = Alignment.Center) { if(color==shade) Icon(Icons.Outlined.Check, null, tint = if(shade==CalmInk) Color.White else CalmInk) } }
     } }
     Canvas(Modifier.fillMaxWidth().height(300.dp).clip(RoundedCornerShape(22.dp)).background(Color.White).pointerInput(color) {

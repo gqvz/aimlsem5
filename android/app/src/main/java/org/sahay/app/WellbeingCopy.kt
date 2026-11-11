@@ -14,6 +14,18 @@ import androidx.compose.ui.unit.isSpecified
 val LocalWellbeingLanguage = compositionLocalOf { "en" }
 // Bundled copy keeps the activity controls usable without a translation service.
 private val wellbeingCopy = """
+Time to rest|आराम का समय|বিশ্রামের সময়|ஓய்வெடுக்கும் நேரம்
+It's past 10 pm. Your body heals while you sleep, so try to rest soon.|रात के 10 बज चुके हैं। नींद में आपका शरीर ठीक होता है, इसलिए जल्द आराम करने की कोशिश करें।|রাত ১০টা পেরিয়ে গেছে। ঘুমের মধ্যে শরীর সেরে ওঠে, তাই শিগগির বিশ্রাম নেওয়ার চেষ্টা করুন।|இரவு 10 மணி கடந்துவிட்டது. தூக்கத்தில் உங்கள் உடல் குணமடைகிறது, எனவே விரைவில் ஓய்வெடுக்க முயலுங்கள்.
+Ayurveda sees the hours before 10 pm as the calmest time to fall asleep. A few warm drops of oil rubbed into the soles of your feet can help you settle.|आयुर्वेद के अनुसार रात 10 बजे से पहले का समय सोने के लिए सबसे शांत होता है। तलवों पर गुनगुने तेल की कुछ बूँदें मलने से मन शांत हो सकता है।|আয়ুর্বেদ মতে রাত ১০টার আগের সময় ঘুমানোর জন্য সবচেয়ে শান্ত। পায়ের তলায় কয়েক ফোঁটা উষ্ণ তেল মালিশ করলে মন স্থির হতে পারে।|ஆயுர்வேதத்தின்படி இரவு 10 மணிக்கு முன் தூங்குவது மிக அமைதியானது. பாதங்களில் சில துளி வெதுவெதுப்பான எண்ணெய் தேய்ப்பது மனதை அமைதிப்படுத்தும்.
+Not tonight|आज रात नहीं|আজ রাতে নয়|இன்றிரவு வேண்டாம்
+FROM AYURVEDA TODAY|आज आयुर्वेद से|আজ আয়ুর্বেদ থেকে|இன்று ஆயுர்வேதத்திலிருந்து
+More herbs and practices|और जड़ी-बूटियाँ और अभ्यास|আরও ভেষজ ও অভ্যাস|மேலும் மூலிகைகளும் பயிற்சிகளும்
+For mental and physical wellbeing|मानसिक और शारीरिक स्वास्थ्य के लिए|মানসিক ও শারীরিক সুস্থতার জন্য|மன மற்றும் உடல் நலனுக்காக
+Ayurvedic self-care|आयुर्वेदिक स्व-देखभाल|আয়ুর্বেদিক আত্ম-যত্ন|ஆயுர்வேத சுய பராமரிப்பு
+Herbs and daily practices for mind and body|मन और शरीर के लिए जड़ी-बूटियाँ और दैनिक अभ्यास|মন ও শরীরের জন্য ভেষজ ও দৈনন্দিন অভ্যাস|மனதுக்கும் உடலுக்கும் மூலிகைகளும் தினசரிப் பயிற்சிகளும்
+Ayurveda for body and mind|शरीर और मन के लिए आयुर्वेद|শরীর ও মনের জন্য আয়ুর্বেদ|உடலுக்கும் மனதுக்கும் ஆயுர்வேதம்
+Daily practices|दैनिक अभ्यास|দৈনন্দিন অভ্যাস|தினசரிப் பயிற்சிகள்
+Herbs traditionally used|पारंपरिक रूप से उपयोग की जाने वाली जड़ी-बूटियाँ|প্রথাগতভাবে ব্যবহৃত ভেষজ|பாரம்பரியமாகப் பயன்படும் மூலிகைகள்
 A slow body scan|धीमा बॉडी स्कैन|ধীর শরীর-স্ক্যান|மெதுவான உடல் ஸ்கேன்
 4 min · Notice each part of you, gently|4 मिनट · अपने हर हिस्से पर धीरे से ध्यान दें|৪ মিনিট · নিজের প্রতিটি অংশ ধীরে খেয়াল করুন|4 நிமிடம் · உங்கள் ஒவ்வொரு பகுதியையும் மெதுவாகக் கவனியுங்கள்
 Notice without trying to change anything. Skip any area that feels uncomfortable.|बिना कुछ बदलने की कोशिश किए ध्यान दें। जो हिस्सा असहज लगे उसे छोड़ दें।|কিছু বদলানোর চেষ্টা না করে খেয়াল করুন। অস্বস্তিকর অংশ বাদ দিন।|எதையும் மாற்ற முயலாமல் கவனியுங்கள். அசௌகரியமான பகுதியைத் தவிர்க்கலாம்.
@@ -246,8 +258,16 @@ fun WellbeingLabel(text: String, modifier: Modifier = Modifier, color: Color = C
                    fontSize: TextUnit = TextUnit.Unspecified, fontWeight: FontWeight? = null,
                    lineHeight: TextUnit = TextUnit.Unspecified, textAlign: TextAlign? = null,
                    maxLines: Int = Int.MAX_VALUE) {
-    // Headings (20sp and up) use a warm serif; body copy stays in the system sans for legibility.
-    val family = if (fontSize.isSpecified && fontSize.value >= 20f) FontFamily.Serif else null
-    Text(wellbeingCopy(LocalWellbeingLanguage.current, text), modifier, color = color, fontSize = fontSize,
-        fontFamily = family, fontWeight = fontWeight, lineHeight = lineHeight, textAlign = textAlign, maxLines = maxLines)
+    // Ember type: headings (20sp and up) use DM Serif Display at its single regular weight;
+    // body copy uses Inter. Non-Latin scripts keep the sans for headings, at medium weight.
+    val language = LocalWellbeingLanguage.current
+    val heading = fontSize.isSpecified && fontSize.value >= 20f
+    val family = if (heading) headingFamily(language) else InterFamily
+    val weight = when {
+        !heading -> fontWeight
+        language == "en" -> FontWeight.Normal
+        else -> FontWeight.Medium
+    }
+    Text(wellbeingCopy(language, text), modifier, color = color, fontSize = fontSize,
+        fontFamily = family, fontWeight = weight, lineHeight = lineHeight, textAlign = textAlign, maxLines = maxLines)
 }

@@ -26,6 +26,7 @@ ACTIVITIES = {
     'worry': {'title': 'Worry box', 'minutes': 3, 'energy': 'low'},
     'journal': {'title': 'A few words for today', 'minutes': 3, 'energy': 'low'},
     'peers': {'title': 'Small words of support', 'minutes': 1, 'energy': 'low'},
+    'ayurveda': {'title': 'Ayurvedic self-care', 'minutes': 3, 'energy': 'low'},
 }
 
 @dataclass

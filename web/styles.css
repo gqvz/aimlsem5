@@ -14,3 +14,85 @@
 @media(max-width:390px){.topbar-inner{padding-left:11px;padding-right:11px}.header-actions{gap:0}.help-button{padding:0 10px}.help-button span{font-size:.75rem}.brand-name{font-size:1.09rem}.brand img{height:32px;width:32px}.content{padding-left:13px;padding-right:13px}.composer-wrap{padding-left:8px;padding-right:8px}.question-form,.phone-form{flex-direction:column}.question-form button,.phone-form button{width:100%}.drawer-actions{flex-wrap:wrap}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{transition-duration:.01ms!important;animation-duration:.01ms!important;animation-iteration-count:1!important}}
 .language-chip select{font:inherit;color:inherit;background:transparent;border:0;max-width:110px;cursor:pointer;outline-offset:3px}
+
+/* ===================================================================
+   Ember theme (terracotta) from the "Sahay app UI" design.
+   Same layout and components; only colour and type change.
+   Inter for interface text, DM Serif Display for headings.
+   =================================================================== */
+@font-face{font-family:Inter;src:url('/assets/fonts/Inter-Variable.ttf') format('truetype');font-weight:100 900;font-style:normal;font-display:swap}
+@font-face{font-family:"DM Serif Display";src:url('/assets/fonts/DMSerifDisplay-Regular.ttf') format('truetype');font-weight:400;font-style:normal;font-display:swap}
+:root{--petal:#FCF8F5;--sandy:#F1E6DB;--linen:#E7E4D0;--blush:#F2CDBD;--terra:#D67A53;--sienna:#A75A4A;--clay:#8B372D;--rust:#6A2D20;--onyx:#330601;--amber:#F6A14B;--olive:#5F5B3A;--warm-gray:#6A463D;--line:#E8D8CC;--line-strong:#8A6A5E;--sienna-soft:#F4DED5;--rose-soft:#F6DDD8;--night:#3E241B;--steam:#E3CDBE;
+  --bg:var(--petal);--surface:#fff;--surface-low:var(--sandy);--surface-mid:var(--sienna-soft);--surface-high:var(--line);--teal:var(--clay);--teal-light:var(--sienna);--ink:var(--onyx);--muted:var(--warm-gray);--outline:var(--line-strong);--terracotta:var(--sienna);--peach:var(--blush);--error:var(--clay);--shadow:0 6px 20px rgba(93,36,29,.10);
+  font-family:Inter,SahayNoto,SahayDeva,SahayBengali,SahayTamil,system-ui,sans-serif;background:var(--bg)}
+h1,h2,.brand-name{font-family:"DM Serif Display",SahayDeva,SahayBengali,SahayTamil,Georgia,serif;font-weight:400;letter-spacing:0}
+:is([lang="hi"],[lang="bn"],[lang="ta"]) :is(h1,h2,.brand-name){font-family:SahayNoto,SahayDeva,SahayBengali,SahayTamil,Inter,system-ui,sans-serif;font-weight:500}
+*:focus-visible{outline-color:var(--sienna)}
+.topbar{background:rgba(252,248,245,.96);border-bottom-color:var(--line)}
+.help-button{background:var(--linen);color:var(--onyx)}.help-button svg{color:var(--olive)}
+.help-button:hover{background:#DCD8BE}
+.hero-image:after{background:linear-gradient(transparent 45%,rgba(252,248,245,.78))}
+.hero-caption{color:var(--clay)}
+.card,.panel{border-color:var(--line);border-radius:28px;box-shadow:var(--shadow)}
+.small-icon{background:var(--sandy);color:var(--clay)}
+.notice.warning{background:var(--rose-soft);color:var(--rust)}
+.lang-option.selected,.topic-chip.selected{background:var(--blush);color:var(--onyx);box-shadow:inset 0 0 0 2px var(--sienna)}
+.lang-option.selected span{color:var(--warm-gray)}
+.switch{background:#D9C7BB}.switch[aria-checked=true]{background:var(--sienna)}
+.primary-button{border:1.5px solid rgba(167,90,74,.5);background:var(--blush);color:var(--onyx);border-radius:20px}
+.primary-button:hover{background:#ECBFAD}
+.status-band.offline{background:var(--rose-soft);color:var(--rust)}
+.ai-banner .small-icon{background:var(--sienna-soft)}
+.message.ai .bubble{border-color:var(--line)}
+.message.user .bubble{background:var(--blush);color:var(--onyx)}
+.composer-wrap{background:linear-gradient(transparent,rgba(252,248,245,.96) 14%)}
+.composer{border-color:var(--line);box-shadow:0 6px 24px rgba(93,36,29,.11)}
+.composer .send-button{background:var(--sienna);color:#fff}
+.bottom-nav{background:rgba(255,255,255,.98);border-top-color:var(--line)}
+.nav-button[aria-current=page]{color:var(--onyx)}
+.path-card{border-color:var(--line);border-radius:28px;box-shadow:var(--shadow)}
+.path-card:hover,.path-card:focus-visible{border-color:var(--sienna)}
+.breath-ring{background:#F6DDD0;border-color:#F6D4B8}
+.breath-ring-inner{background:var(--terra);color:var(--onyx)}
+.progress-track>span{background:var(--sienna)}
+.question-row{border-color:var(--line)}.question-row.done .question-text{color:var(--warm-gray)}
+.check-button{border-color:var(--line-strong)}.question-row.done .check-button{background:var(--sienna)}
+.question-form input,.phone-form input{border-color:var(--line-strong)}
+.help-hero{background:var(--rose-soft);color:var(--rust)}
+.help-card .phone-link{background:var(--olive)}
+.transcript-backdrop{background:#33060170}.transcript-drawer{box-shadow:0 -12px 35px #3306012b}
+.privacy-veil{background:var(--sandy)}
+.divider{background:var(--line)}
+.unsupported{background:var(--rose-soft);color:var(--rust)}
+
+/* Bedtime reminder */
+.bedtime{background:var(--night);color:var(--petal);border-radius:28px;padding:20px;margin-bottom:18px;display:flex;flex-direction:column;gap:8px}
+.bedtime .bedtime-time{display:flex;align-items:center;gap:8px;color:var(--steam);font-weight:600;font-size:.88rem}
+.bedtime .bedtime-time svg{color:var(--amber)}
+.bedtime h2{margin:0;color:var(--petal);font-size:1.75rem}
+.bedtime p{margin:0;line-height:1.55}
+.bedtime .bedtime-tip{color:var(--steam);font-size:.9rem}
+.bedtime-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:6px}
+.bedtime .primary-button{min-height:50px;padding:0 18px}
+.bedtime .text-button{color:var(--steam)}
+
+/* Ayurveda */
+.ayur-tip{background:var(--linen);border-radius:28px;padding:20px;margin:18px 0;display:flex;flex-direction:column;gap:6px}
+.ayur-tip .eyebrow,.ayur-safety svg{color:var(--olive)}
+.ayur-tip h2{margin:0}
+.ayur-tip p{margin:0;line-height:1.55}
+.ayur-meta{color:var(--warm-gray);font-size:.88rem}
+.ayur-safety{display:flex;gap:12px;align-items:flex-start;background:var(--linen);border-radius:20px;padding:14px 16px;margin:14px 0;line-height:1.5}
+.ayur-filter{display:flex;gap:8px;margin:8px 0 18px}
+.ayur-list{background:#fff;border-radius:28px;padding:6px 18px;box-shadow:var(--shadow);margin-bottom:22px}
+.ayur-list details{border-bottom:1px solid var(--line);padding:12px 0}
+.ayur-list details:last-child{border-bottom:0}
+.ayur-list summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:12px;min-height:44px}
+.ayur-list summary::-webkit-details-marker{display:none}
+.ayur-list summary strong{display:block}
+.ayur-list summary small{color:var(--warm-gray)}
+.ayur-list summary svg{transition:transform .18s;color:var(--warm-gray)}
+.ayur-list details[open] summary svg{transform:rotate(90deg)}
+.ayur-list p{margin:8px 0 0;line-height:1.55}
+.ayur-care{background:var(--sandy);border-radius:14px;padding:10px 12px;margin-top:8px;font-size:.9rem;color:var(--warm-gray)}
+.ayur-care.warn{background:var(--rose-soft);color:var(--rust)}

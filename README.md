@@ -141,3 +141,11 @@ docker compose -f compose.yaml -f compose.kratos.yaml up -d --build
 ```
 
 The bridge streams each private Docker connection through the existing SSH master to remote loopback port 11434. It mounts the mux socket, requires no loaded key, and publishes no model port. The socket grants access to that SSH session: keep it limited to this trusted bridge. Closing the master breaks the connection; after reconnecting, update `SAHAY_SSH_MUX` and recreate `model-tunnel` with the same Compose files. There is no automatic new SSH login when the master disappears. Android Settings → **Use backend default** clears any old per-device provider selection.
+
+## Ember theme, bedtime reminder and Ayurveda (November 2026)
+
+Both clients now use the **Ember** terracotta palette from the team's design file: Petal and Sandy Cream surfaces, Blush primary buttons and selections, Burnt Sienna edges, switches and focus, Clay accent text, Olive for help, and Onyx text. Headings use DM Serif Display and interface text uses Inter (both bundled, SIL Open Font License); Hindi, Bengali and Tamil headings stay in the sans. On Android the palette lives in `EmberTheme.kt`; on the web it is the Ember block at the end of `web/styles.css`.
+
+**Bedtime reminder.** From 10 pm to 5 am, Today (Android) and the Conversation and Support paths views (web) show a "Time to rest" card with a link to the wind-down activity (Android) or a slow breath (web). It can be dismissed for the night. Android also shows a one-line reminder once per night on whichever screen is open. Nothing runs outside the app.
+
+**Ayurvedic self-care.** Today and Support paths show a different Ayurvedic practice each day, and a full guide covers daily practices (dinacharya, nadi shodhana, bhramari, abhyanga, padabhyanga, warm meals, evening routine, restorative yoga) and herbs traditionally used for mind and body (tulsi, ashwagandha, brahmi, jatamansi, haldi, shunthi, amla, triphala). Herbs are described without doses, each with interaction cautions, and the guide asks people to check with their oncologist or pharmacist first. It is listed in the backend activity catalogue as `ayurveda`.

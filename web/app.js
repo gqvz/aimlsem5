@@ -48,6 +48,7 @@ const state = {
   hidden: false, pending: false, mode: 'demo', online: navigator.onLine,
   toast: '', lastRequest: null, lastUrgentText: '', cards: CARD_FALLBACK,
   exerciseRemaining: 120, exerciseRunning: false,
+  bedtimeDismissed: '', wasPastBedtime: null, ayurFocus: 'all',
 };
 let toastTimer;
 let exerciseTimer;
@@ -80,7 +81,7 @@ function changeView(view) {
   window.scrollTo({ top: 0, behavior: 'instant' });
 }
 function header() {
-  const title = { chat: local('chat'), paths: local('paths'), exercise: local('copingTitle'), info: local('info'), questions: local('questions'), help: local('urgentHelp') }[state.view] || '';
+  const title = { chat: local('chat'), paths: local('paths'), exercise: local('copingTitle'), info: local('info'), questions: local('questions'), help: local('urgentHelp'), ayurveda: 'Ayurveda' }[state.view] || '';
   return `<header class="topbar"><div class="topbar-inner"><div class="topbar-main">
     <a class="brand" href="#chat" data-action="nav" data-view="chat"><img src="/assets/sahay-emblem.png" alt="" /><span><span class="brand-name">Sahay</span><span class="brand-sub">${e(local('subtitle'))}</span></span></a>
     <div class="header-actions"><button class="help-button" type="button" data-action="nav" data-view="help">${icon('help')}<span>${e(local('help'))}</span></button>
@@ -117,7 +118,7 @@ function messageView(msg, index) {
 }
 function chat() {
   const msgs = state.messages.length ? state.messages : [{ role: 'ai', text: local('intro'), time: '', route: 'ordinary' }];
-  return `<main class="content" id="main">${statusBand()}<div class="ai-banner"><span class="small-icon">${icon('shield')}</span><div><strong>${e(local('aiLabel'))}</strong><p>${e(local('boundary'))}</p></div></div>
+  return `<main class="content" id="main">${bedtimeCard()}${statusBand()}<div class="ai-banner"><span class="small-icon">${icon('shield')}</span><div><strong>${e(local('aiLabel'))}</strong><p>${e(local('boundary'))}</p></div></div>
     <div class="chat-stream" aria-live="polite"><div class="date-pill">${e(new Intl.DateTimeFormat(state.lang + '-IN', { day: 'numeric', month: 'short' }).format(new Date()))}</div>${msgs.map(messageView).join('')}${state.pending ? `<div class="typing" role="status">${e(local('thinking'))}</div>` : ''}</div>
     ${state.lastRequest && !state.pending ? `<div class="section-actions"><button class="quiet-button" type="button" data-action="retry">${icon('refresh')}${e(local('retry'))}</button></div>` : ''}</main>
     <div class="composer-wrap"><form id="chat-form" class="composer"><label for="chat-input" class="sr-only">${e(local('chat'))}</label><textarea id="chat-input" name="text" rows="1" maxlength="4000" placeholder="${e(local('typePlaceholder'))}" ${state.pending ? 'disabled' : ''}>${e(state.topic ? local('topic' + state.topic[0].toUpperCase() + state.topic.slice(1)) : '')}</textarea><button type="button" class="mic-button" data-action="record" aria-label="${e(local('mic'))}" ${state.pending ? 'disabled' : ''}>${icon('mic')}</button><button type="submit" class="send-button" aria-label="${e(local('send'))}" ${state.pending ? 'disabled' : ''}>${icon('send')}</button></form><div class="composer-hint">${e(local('transcriptHint'))}</div></div>`;
@@ -127,7 +128,7 @@ function paths() {
     ['reflect', 'message', 'reflectTitle', 'reflectBody'], ['coping', 'wind', 'copingTitle', 'copingBody'],
     ['info', 'book', 'infoTitle', 'infoBody'], ['questions', 'list', 'questionsTitle', 'questionsBody'],
   ];
-  return `<main class="content" id="main">${statusBand()}<div class="card path-intro"><span class="eyebrow">${e(local('aiLabel'))}</span><h1>${e(local('pathsTitle'))}</h1><p>${e(local('pathsLead'))}</p></div><div class="path-grid">${options.map(([action, image, title, body]) => `<button class="path-card" type="button" data-action="path" data-path="${action}"><span class="small-icon">${icon(image)}</span><span class="path-copy"><strong>${e(local(title))}</strong><span>${e(local(body))}</span></span>${icon('chevron')}</button>`).join('')}</div><div class="soft-panel path-footer">${icon('shield')} ${e(local('boundary'))}</div></main>`;
+  return `<main class="content" id="main">${bedtimeCard()}${statusBand()}<div class="card path-intro"><span class="eyebrow">${e(local('aiLabel'))}</span><h1>${e(local('pathsTitle'))}</h1><p>${e(local('pathsLead'))}</p></div><div class="path-grid">${options.map(([action, image, title, body]) => `<button class="path-card" type="button" data-action="path" data-path="${action}"><span class="small-icon">${icon(image)}</span><span class="path-copy"><strong>${e(local(title))}</strong><span>${e(local(body))}</span></span>${icon('chevron')}</button>`).join('')}</div>${ayurTip()}<div class="soft-panel path-footer">${icon('shield')} ${e(local('boundary'))}</div></main>`;
 }
 function exercise() {
   const elapsed = 120 - state.exerciseRemaining;
@@ -169,10 +170,72 @@ function privacyVeil() {
   if (!state.hidden) return '';
   return `<div class="privacy-veil" role="dialog" aria-modal="true" aria-labelledby="veil-title"><img src="/assets/sahay-emblem.png" alt="" /><h1 id="veil-title">${e(local('privacyCover'))}</h1><p>${e(local('privacyCoverHint'))}</p><button type="button" class="primary-button" data-action="unhide">${icon('eye')}${e(local('showAgain'))}</button></div>`;
 }
+// ---- Bedtime reminder: from 10 pm to 5 am the app gently suggests sleep (dismissible per night). ----
+const BEDTIME_HOUR = 22, MORNING_HOUR = 5;
+const BEDTIME_COPY = {
+  en: ['Time to rest', "It's past 10 pm. Your body heals while you sleep, so try to rest soon.", 'Ayurveda sees the hours before 10 pm as the calmest time to fall asleep. A few warm drops of oil rubbed into the soles of your feet can help you settle.', 'Try a slow breath', 'Not tonight'],
+  hi: ['आराम का समय', 'रात के 10 बज चुके हैं। नींद में आपका शरीर ठीक होता है, इसलिए जल्द आराम करने की कोशिश करें।', 'आयुर्वेद के अनुसार रात 10 बजे से पहले का समय सोने के लिए सबसे शांत होता है। तलवों पर गुनगुने तेल की कुछ बूँदें मलने से मन शांत हो सकता है।', 'धीमी साँस लें', 'आज रात नहीं'],
+  bn: ['বিশ্রামের সময়', 'রাত ১০টা পেরিয়ে গেছে। ঘুমের মধ্যে শরীর সেরে ওঠে, তাই শিগগির বিশ্রাম নেওয়ার চেষ্টা করুন।', 'আয়ুর্বেদ মতে রাত ১০টার আগের সময় ঘুমানোর জন্য সবচেয়ে শান্ত। পায়ের তলায় কয়েক ফোঁটা উষ্ণ তেল মালিশ করলে মন স্থির হতে পারে।', 'ধীরে শ্বাস নিন', 'আজ রাতে নয়'],
+  ta: ['ஓய்வெடுக்கும் நேரம்', 'இரவு 10 மணி கடந்துவிட்டது. தூக்கத்தில் உங்கள் உடல் குணமடைகிறது, எனவே விரைவில் ஓய்வெடுக்க முயலுங்கள்.', 'ஆயுர்வேதத்தின்படி இரவு 10 மணிக்கு முன் தூங்குவது மிக அமைதியானது. பாதங்களில் சில துளி வெதுவெதுப்பான எண்ணெய் தேய்ப்பது மனதை அமைதிப்படுத்தும்.', 'மெதுவாக மூச்சு விடுங்கள்', 'இன்றிரவு வேண்டாம்'],
+};
+function isPastBedtime(now = new Date()) { return now.getHours() >= BEDTIME_HOUR || now.getHours() < MORNING_HOUR; }
+function bedtimeNight(now = new Date()) { const d = new Date(now); if (d.getHours() < MORNING_HOUR) d.setDate(d.getDate() - 1); return d.toDateString(); }
+function bedtimeCard() {
+  if (!isPastBedtime() || state.bedtimeDismissed === bedtimeNight()) return '';
+  const [title, body, tip, start, later] = BEDTIME_COPY[state.lang] || BEDTIME_COPY.en;
+  return `<section class="bedtime" role="status" aria-labelledby="bedtime-title"><span class="bedtime-time">${icon('moon')}${e(formatTime())}</span><h2 id="bedtime-title">${e(title)}</h2><p>${e(body)}</p><p class="bedtime-tip">${e(tip)}</p>
+    <div class="bedtime-actions"><button class="primary-button" type="button" data-action="path" data-path="coping">${e(start)}</button><button class="text-button" type="button" data-action="bedtime-dismiss">${e(later)}</button></div></section>`;
+}
+// Re-render at 10 pm (and at 5 am) if the app is left open.
+setInterval(() => { const past = isPastBedtime(); if (past !== state.wasPastBedtime) { state.wasPastBedtime = past; if (state.view !== 'welcome' && !state.hidden) render(); } }, 30000);
+
+// ---- Ayurvedic self-care: daily practices and herbs, for mind and body. No doses on purpose. ----
+const AYUR_SAFETY = 'Herbs and supplements can change how chemotherapy, radiotherapy, hormone therapy and other medicines work. Please ask your oncologist or pharmacist before taking any herb as a tea, powder or capsule. These are traditional ideas for comfort, not treatment.';
+const AYUR_PRACTICES = [
+  { name: 'A steady daily rhythm', local: 'Dinacharya', focus: 'both', how: 'Wake, eat and sleep at roughly the same times each day. A predictable rhythm is the foundation of Ayurvedic self-care and helps both energy and mood.' },
+  { name: 'Alternate-nostril breathing', local: 'Nadi Shodhana', focus: 'mind', how: 'Sit comfortably. Close the right nostril with your thumb and breathe in through the left; switch and breathe out through the right. Continue slowly for a few rounds, with no breath holds.', care: 'Stop if you feel light-headed or short of breath.' },
+  { name: 'Humming bee breath', local: 'Bhramari', focus: 'mind', how: 'Breathe in gently, then hum softly like a bee as you breathe out. Let the vibration settle your face and chest. Five or six rounds are enough.' },
+  { name: 'Warm oil self-massage', local: 'Abhyanga', focus: 'body', how: 'Warm a little sesame or coconut oil and massage it slowly into your arms, legs and shoulders before a warm bath. It is a grounding, nurturing ritual.', care: 'Skip skin being treated with radiotherapy, broken skin, and areas around ports or lines. Ask your care team if unsure.' },
+  { name: 'Foot massage before bed', local: 'Padabhyanga', focus: 'both', how: 'Rub a few drops of warm oil into the soles of your feet at bedtime. Many people find this helps the mind settle for sleep. Wear socks afterwards to avoid slipping.' },
+  { name: 'Warm, simple meals', local: 'Ahara', focus: 'body', how: 'Favour freshly cooked, warm, easy-to-digest food such as khichdi, soups and dal. Make lunch your main meal and keep dinner light and early.', care: 'Follow any diet your oncology team or dietitian has given you.' },
+  { name: 'Sip warm water', local: 'Ushnodaka', focus: 'body', how: 'Sip warm or room-temperature water through the day rather than very cold drinks. Ayurveda considers this gentle on digestion.' },
+  { name: 'A calm evening routine', local: 'Ratricharya', focus: 'mind', how: 'Dim lights and put screens away an hour before bed. Read, listen to soft sound, or sit quietly, and aim to be asleep before 10 pm.' },
+  { name: 'Gentle restorative yoga', local: 'Yoga', focus: 'both', how: "Child's pose (Balasana) or resting with your legs up a wall (Viparita Karani) for a few minutes can ease tension. Use cushions and move only as far as is comfortable.", care: 'Check with your care team before new movement if you have bone pain, low blood counts or recent surgery.' },
+];
+const AYUR_HERBS = [
+  { name: 'Tulsi', local: 'Holy basil', focus: 'both', use: 'Drunk as a warm tea to support calm and resilience to stress, and for a soothing throat.', caution: 'In concentrated forms it may affect blood clotting and blood sugar.' },
+  { name: 'Ashwagandha', local: 'Withania somnifera', focus: 'mind', use: 'A rasayana (rejuvenating) herb traditionally used for stress, restful sleep and strength. Some studies suggest it may lower stress.', caution: 'Can interact with thyroid, sedative, diabetes, blood pressure and immune-suppressing medicines. Rare liver problems have been reported. Avoid in pregnancy.' },
+  { name: 'Brahmi', local: 'Bacopa monnieri', focus: 'mind', use: 'Traditionally used to support memory, focus and a quieter mind.', caution: 'May upset the stomach and can add to the effect of sedatives.' },
+  { name: 'Jatamansi', local: 'Spikenard', focus: 'mind', use: 'Traditionally used to calm an unsettled mind and encourage sleep.', caution: 'Evidence is limited. It may add to the effect of sleeping tablets or sedatives.' },
+  { name: 'Haldi', local: 'Turmeric', focus: 'body', use: 'Used in everyday cooking and warm haldi doodh (golden milk) for its soothing, anti-inflammatory reputation.', caution: 'Cooking amounts are generally considered safe. Supplements may interact with blood thinners and some chemotherapy drugs.' },
+  { name: 'Shunthi', local: 'Dried ginger', focus: 'body', use: 'Used in tea or food to ease nausea and support digestion. Some studies suggest ginger may help treatment-related nausea.', caution: 'Larger amounts may increase bleeding risk with blood thinners or low platelets.' },
+  { name: 'Amla', local: 'Indian gooseberry', focus: 'body', use: 'A vitamin-C-rich fruit valued as a rasayana for general vitality and digestion.', caution: 'Concentrated extracts may affect blood sugar and clotting.' },
+  { name: 'Triphala', local: 'Three fruits', focus: 'body', use: 'A traditional blend used for gentle digestion and bowel regularity.', caution: 'It can loosen stools. Avoid if you have diarrhoea.' },
+];
+const FOCUS_LABEL = { mind: 'For the mind', body: 'For the body', both: 'Mind and body' };
+function dayOfYear() { const now = new Date(); return Math.floor((now - new Date(now.getFullYear(), 0, 0)) / 86400000); }
+function ayurTip() {
+  const tip = AYUR_PRACTICES[dayOfYear() % AYUR_PRACTICES.length];
+  return `<section class="ayur-tip" aria-labelledby="ayur-tip-title"><span class="eyebrow">${icon('leaf')} From Ayurveda today</span><h2 id="ayur-tip-title">${e(tip.name)}</h2><span class="ayur-meta">${e(tip.local)} · ${e(FOCUS_LABEL[tip.focus])}</span><p>${e(tip.how)}</p>${tip.care ? `<p class="ayur-meta">${e(tip.care)}</p>` : ''}
+    <div><button class="text-button" type="button" data-action="nav" data-view="ayurveda">More herbs and practices ${icon('chevron')}</button></div></section>`;
+}
+function ayurItem(title, local, focus, body, care, warn) {
+  return `<details><summary><span><strong>${e(title)}</strong><small>${e(local)} · ${e(FOCUS_LABEL[focus])}</small></span>${icon('chevron')}</summary><p>${e(body)}</p>${care ? `<div class="ayur-care ${warn ? 'warn' : ''}">${e(care)}</div>` : ''}</details>`;
+}
+function ayurveda() {
+  const f = state.ayurFocus;
+  const keep = x => f === 'all' || x.focus === 'both' || x.focus === f;
+  return `<main class="content" id="main"><div class="card path-intro"><span class="eyebrow">${icon('leaf')} Ayurveda</span><h1>Ayurvedic self-care</h1><p>Ayurveda, India's traditional system of wellbeing, focuses on daily rhythm, warmth and balance. Choose anything that feels comfortable today.</p></div>
+    <div class="ayur-safety">${icon('help')}<p>${e(AYUR_SAFETY)}</p></div>
+    <div class="ayur-filter" role="group" aria-label="Filter">${[['all', 'All'], ['mind', 'Mind'], ['body', 'Body']].map(([id, label]) => `<button type="button" class="topic-chip ${f === id ? 'selected' : ''}" data-action="ayur-focus" data-focus="${id}" aria-pressed="${f === id}">${label}</button>`).join('')}</div>
+    <h2>Daily practices</h2><div class="ayur-list">${AYUR_PRACTICES.filter(keep).map(p => ayurItem(p.name, p.local, p.focus, p.how, p.care, false)).join('')}</div>
+    <h2>Herbs traditionally used</h2><p class="section-help">Open a herb to read about it. No doses are given on purpose.</p><div class="ayur-list">${AYUR_HERBS.filter(keep).map(h => ayurItem(h.name, h.local, h.focus, h.use, 'Check first: ' + h.caution, true)).join('')}</div>
+    <button class="primary-button full" type="button" data-action="path" data-path="coping">Try a calming breath ${icon('arrow-right')}</button></main>`;
+}
 function render() {
   document.documentElement.lang = state.lang;
   document.title = `Sahay · ${local('welcomeTitle')}`;
-  root.innerHTML = `<div class="app-shell ${state.view === 'chat' ? 'chat-view' : ''} ${state.view === 'welcome' ? 'welcome-view' : ''}">${state.view === 'welcome' ? '' : header()}${({ welcome, chat, paths, exercise, info, questions, help })[state.view]()}${state.view === 'welcome' ? '' : nav()}</div>${transcriptDrawer()}${privacyVeil()}${state.toast ? `<div class="toast" role="status">${e(state.toast)}</div>` : ''}`;
+  root.innerHTML = `<div class="app-shell ${state.view === 'chat' ? 'chat-view' : ''} ${state.view === 'welcome' ? 'welcome-view' : ''}">${state.view === 'welcome' ? '' : header()}${({ welcome, chat, paths, exercise, info, questions, help, ayurveda })[state.view]()}${state.view === 'welcome' ? '' : nav()}</div>${transcriptDrawer()}${privacyVeil()}${state.toast ? `<div class="toast" role="status">${e(state.toast)}</div>` : ''}`;
 }
 
 async function refreshStatus() {
@@ -294,6 +357,8 @@ root.addEventListener('click', event => {
     if (path === 'info') changeView('info');
     if (path === 'questions') changeView('questions');
   }
+  else if (action === 'bedtime-dismiss') { state.bedtimeDismissed = bedtimeNight(); render(); }
+  else if (action === 'ayur-focus') { state.ayurFocus = button.dataset.focus; render(); }
   else if (action === 'exercise-toggle') toggleExercise();
   else if (action === 'exercise-stop') { stopExercise(); changeView('chat'); }
   else if (action === 'ask-card') { changeView('chat'); const card = state.cards.find(x => x.id === button.dataset.card); if (card) { const input = document.getElementById('chat-input'); input.value = `I would like general information about ${card.id}.`; input.focus(); } }
